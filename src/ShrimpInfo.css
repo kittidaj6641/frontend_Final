@@ -1,0 +1,142 @@
+.shrimp-info-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f5f5f5;
+}
+
+/* ส่วนหัว */
+.header {
+    background-color: #1E90FF;
+    padding: 10px 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 15px;
+}
+
+.back-btnA {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: auto;
+    min-width: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-right: 12px;
+}
+
+.back-btn:hover {
+    background-color: #d32f2f;
+    transform: translateY(-2px);
+}
+
+.back-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* เนื้อหา */
+.shrimp-content {
+    flex: 1;
+    padding: 40px;
+    text-align: center;
+}
+
+.shrimp-content h1 {
+    font-size: 36px;
+    color: #333;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.shrimp-details {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: left;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.shrimp-details h2 {
+    font-size: 24px;
+    color: #1E90FF;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.shrimp-details p {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+/* สไตล์สำหรับรูปภาพ */
+.shrimp-image {
+    width: 100%;
+    max-width: 300px; /* จำกัดความกว้างสูงสุดของรูปภาพ */
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .shrimp-content {
+        padding: 20px;
+    }
+
+    .shrimp-content h1 {
+        font-size: 28px;
+    }
+
+    .shrimp-details h2 {
+        font-size: 20px;
+    }
+
+    .shrimp-details p {
+        font-size: 14px;
+    }
+
+    .nav {
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .back-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+        gap: 8px;
+        min-width: 70px;
+    }
+
+    .shrimp-image {
+        max-width: 200px; /* ลดขนาดรูปภาพในหน้าจอเล็ก */
+    }
+}

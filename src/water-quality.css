@@ -1,0 +1,260 @@
+.container {
+    max-width: 90%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    overflow-y: auto; /* อนุญาตให้เลื่อนในแนวตั้ง */
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+/* Dashboard Styles */
+.dashboard {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard h2 {
+    text-align: center;
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.dashboard-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+}
+
+.dashboard-item {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 200px;
+    text-align: center;
+}
+
+.dashboard-label {
+    display: block;
+    font-weight: bold;
+    color: #1E90FF;
+    margin-bottom: 5px;
+}
+
+.dashboard-value {
+    display: block;
+    font-size: 16px;
+    color: #333;
+}
+
+/* Quality Summary Styles */
+.quality-summary {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #c2e9fb;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.quality-summary h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.quality-summary ul {
+    list-style: none;
+    padding: 0;
+}
+
+.quality-summary li {
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.quality-summary .suitable {
+    color: #4CAF50; /* เขียวเมื่อเหมาะสม */
+}
+
+.quality-summary .unsuitable {
+    color: #f44336; /* แดงเมื่อไม่เหมาะสม */
+}
+
+.button-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.column-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 150px;
+    padding: 20px;
+    background-color: #1E90FF;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.column-btn:hover {
+    background-color: #1C86EE;
+}
+
+.column-btn .icon {
+    font-size: 36px;
+    margin-bottom: 8px;
+}
+
+.column-btn span {
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Footer Styles */
+.footer {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 450px; /* ปรับขนาดให้รองรับปุ่มเพิ่ม */
+    justify-content: center;
+    margin: 20px auto; /* เพิ่ม margin เพื่อให้อยู่ด้านล่าง */
+}
+
+.home-btn, .status-btn {
+    width: 100px;
+    padding: 10px;
+    background-color: #1E90FF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.home-btn:hover, .status-btn:hover {
+    background-color: #1C86EE;
+}
+
+#logoutBtn {
+    width: 100px;
+    padding: 10px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+#logoutBtn:hover {
+    background-color: #d32f2f;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.modal h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.modal-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.modal-table th,
+.modal-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: center;
+}
+
+.modal-table th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.modal-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.close-btn {
+    display: block;
+    width: 120px;
+    margin: 0 auto;
+    padding: 12px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 16px;
+}
+
+.close-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* Responsive Design */
+@media (max-width: 400px) {
+    .footer {
+        flex-direction: column;
+        gap: 10px;
+        max-width: 150px;
+    }
+
+    .home-btn,
+    .status-btn,
+    #logoutBtn {
+        width: 120px;
+    }
+}

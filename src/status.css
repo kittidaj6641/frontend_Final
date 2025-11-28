@@ -1,0 +1,92 @@
+.status-container {
+    max-width: 90%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.status-table-container {
+    overflow-x: auto; /* อนุญาตให้เลื่อนในแนวนอนสำหรับตาราง */
+}
+
+.status-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.status-table th,
+.status-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+.status-table th {
+    background-color: #1E90FF;
+    color: white;
+    font-weight: bold;
+}
+
+.status-table td {
+    background-color: #f9f9f9;
+}
+
+.status-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+
+
+.back-btn {
+    width: 200px;
+    padding: 10px;
+    background-color: #1E90FF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+    background-color: #1C86EE;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .status-table th,
+    .status-table td {
+        padding: 8px;
+        font-size: 14px;
+    }
+
+    .back-btn {
+        width: 150px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 400px) {
+    .status-table th,
+    .status-table td {
+        padding: 6px;
+        font-size: 12px;
+    }
+
+    .back-btn {
+        width: 120px;
+        font-size: 12px;
+    }
+}

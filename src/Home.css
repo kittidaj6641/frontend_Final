@@ -1,0 +1,315 @@
+/* รีเซ็ต margin และ padding */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.home-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ส่วนหัว */
+.header {
+    background-color: #1E90FF;
+    padding: 10px 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* ชิดขวา */
+    gap: 12px; /* ปรับระยะห่างระหว่างปุ่ม (จาก 15px เป็น 12px เพื่อให้สอดคล้องกับ margin-right เดิม) */
+}
+
+.nav a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+    transition: color 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.nav a:hover {
+    color: #C2E9FB;
+}
+
+/* ปุ่มใน nav (logout-btn, alert-btn, history-btn) */
+.logout-btn, .alert-btn, .history-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: auto;
+    min-width: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* ปรับ gap ระหว่างไอคอนและข้อความ (จาก 1px เป็น 8px เพื่อให้สอดคล้องกับหน้า ShrimpInfo) */
+}
+
+.logout-btn:hover, .alert-btn:hover, .history-btn:hover {
+    background-color: #d32f2f;
+    transform: translateY(-2px);
+}
+
+.logout-btn:active, .alert-btn:active, .history-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* ส่วนเนื้อหาหลัก */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    min-height: calc(100vh - 60px);
+}
+
+/* ด้านซ้าย (รูปภาพพื้นหลัง) */
+.content-left {
+    flex: 1;
+    background-image: url('background/IMG_9462 ก้ามกราม01 (1).JPG');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* ด้านขวา (ข้อความและปุ่ม) */
+.content-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    padding: 40px;
+    text-align: center;
+    position: relative;
+}
+
+.content-right h1 {
+    font-size: 36px;
+    color: #333;
+    margin-bottom: 10px;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.content-right h2 {
+    font-size: 24px;
+    color: #1E90FF;
+    margin-bottom: 20px;
+}
+
+.content-right p {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+/* กลุ่มปุ่ม */
+.button-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.action-btn {
+    background-color: #1E90FF;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-btn:hover {
+    background-color: #1C86EE;
+    transform: translateY(-2px);
+}
+
+/* ปรับสำหรับ PieChart */
+div[style*="maxWidth: 400"] {
+    width: 100%;
+    max-width: 400px;
+    height: 350px;
+    margin-bottom: 20px;
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.modal h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.modal-content {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* สไตล์ตารางสำหรับประวัติการล็อกอิน */
+.login-logs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.login-logs-table th,
+.login-logs-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.login-logs-table th {
+    background-color: #1E90FF;
+    color: white;
+    font-weight: bold;
+}
+
+.login-logs-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.login-logs-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* สไตล์สำหรับสถานะ */
+.status-online {
+    color: #28a745; /* สีเขียวสำหรับ online */
+    font-weight: bold;
+}
+
+.status-offline {
+    color: #dc3545; /* สีแดงสำหรับ offline */
+    font-weight: bold;
+}
+
+.close-btn {
+    display: block;
+    width: 120px;
+    margin: 0 auto;
+    padding: 10px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background-color: #d32f2f;
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .content-left {
+        flex: none;
+        height: 200px;
+    }
+
+    .content-right {
+        padding: 20px;
+    }
+
+    .content-right h1 {
+        font-size: 28px;
+    }
+
+    .content-right h2 {
+        font-size: 20px;
+    }
+
+    .content-right p {
+        font-size: 16px;
+    }
+
+    .action-btn {
+        font-size: 16px;
+        padding: 12px 16px;
+    }
+
+    .nav {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 10px; /* ระยะห่างในหน้าจอเล็ก */
+    }
+
+    .nav a {
+        font-size: 14px;
+    }
+
+    .logout-btn, .alert-btn, .history-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+        min-width: 70px;
+    }
+
+    .login-logs-table th,
+    .login-logs-table td {
+        padding: 8px;
+        font-size: 14px;
+    }
+}

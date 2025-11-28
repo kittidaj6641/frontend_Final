@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/static/css/main.d3b4cc10.css",
+    "main.js": "/static/js/main.4e4f00fe.js",
+    "static/media/shrimpCare.jpg": "/static/media/shrimpCare.dd75f542acd80a200373.jpg",
+    "static/media/shrimpNutrition.jpg": "/static/media/shrimpNutrition.6b0e2a1e886be0ffb720.jpg",
+    "static/media/1574333475_88148_Cover_6June28.jpg": "/static/media/1574333475_88148_Cover_6June28.eb9ee446f4b06843d54e.jpg",
+    "static/media/shrimpHabitat.jpg": "/static/media/shrimpHabitat.e2055cf1f1d77fd31547.jpg",
+    "static/media/IMG_9462 ก้ามกราม01 (1).JPG": "/static/media/IMG_9462 ก้ามกราม01 (1).9585a75b1b50f87cc354.JPG",
+    "static/media/shrimpAppearance.jpg": "/static/media/shrimpAppearance.9b9e7f9bbac43083d2ee.jpg",
+    "static/media/shrimpFarming.jpg": "/static/media/shrimpFarming.30f08dee92e3b86e9d56.jpg",
+    "index.html": "/index.html",
+    "main.d3b4cc10.css.map": "/static/css/main.d3b4cc10.css.map",
+    "main.4e4f00fe.js.map": "/static/js/main.4e4f00fe.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.d3b4cc10.css",
+    "static/js/main.4e4f00fe.js"
+  ]
+}
