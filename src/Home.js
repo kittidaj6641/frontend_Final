@@ -1,3 +1,4 @@
+// src/Home.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,7 @@ import {
   Clock,
   Shrimp,
   Activity,
-  PlusCircle, // 🚀 ไอคอนสำหรับปุ่มเพิ่มอุปกรณ์
+  PlusCircle,
   ChevronDown
 } from 'lucide-react';
 
@@ -35,13 +36,21 @@ const Home = () => {
   const [waterData, setWaterData] = useState([]);
   const [error, setError] = useState('');
 
-  // 🚀 State สำหรับจัดการอุปกรณ์
+  // 🚀 แก้ไข 1: โหลดค่า Device ที่เลือกล่าสุดจาก localStorage ถ้ามี
   const [devices, setDevices] = useState([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState('');
+  const [selectedDeviceId, setSelectedDeviceId] = useState(
+    localStorage.getItem('lastSelectedDevice') || ''
+  );
   const [loadingDevices, setLoadingDevices] = useState(true);
 
+  // 🚀 แก้ไข 2: บันทึกค่าลง localStorage ทุกครั้งที่เปลี่ยนอุปกรณ์
   useEffect(() => {
-    // ตั้งค่าพื้นหลังให้เต็มจอ
+    if (selectedDeviceId) {
+      localStorage.setItem('lastSelectedDevice', selectedDeviceId);
+    }
+  }, [selectedDeviceId]);
+
+  useEffect(() => {
     document.body.style.minHeight = '100vh';
     document.body.style.margin = '0';
 
@@ -60,16 +69,20 @@ const Home = () => {
 
         if (response.data && response.data.length > 0) {
           setDevices(response.data);
-          // ถ้ายังไม่ได้เลือกอุปกรณ์ ให้เลือกตัวแรกเป็นค่าเริ่มต้น
-          if (!selectedDeviceId) {
-            setSelectedDeviceId(response.data[0].device_id);
+
+          // 🚀 แก้ไข 3: ตรวจสอบว่า Device ที่จำไว้ (จาก localStorage) ยังมีอยู่ในรายการหรือไม่
+          // ถ้าไม่มี หรือยังไม่ได้เลือก ให้ Default เป็นตัวแรก
+          const currentDeviceExists = response.data.some(d => d.device_id === selectedDeviceId);
+          
+          if (!selectedDeviceId || !currentDeviceExists) {
+            const defaultDevice = response.data[0].device_id;
+            setSelectedDeviceId(defaultDevice);
           }
         } else {
           setDevices([]);
         }
       } catch (err) {
         console.error("Error fetching devices:", err);
-        // ไม่ต้อง set error ที่นี่ เพราะอาจจะแค่ยังไม่มีอุปกรณ์
       } finally {
         setLoadingDevices(false);
       }
@@ -81,7 +94,8 @@ const Home = () => {
       document.body.style.minHeight = '';
       document.body.style.margin = '';
     };
-  }, [navigate, selectedDeviceId]); // เพิ่ม selectedDeviceId เพื่อแก้ ESLint warning
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]); // เอา selectedDeviceId ออกจาก dependency ของ fetchDevices เพื่อป้องกัน loop
 
   // 2. ดึงข้อมูลคุณภาพน้ำเมื่อ selectedDeviceId เปลี่ยน
   useEffect(() => {
@@ -96,13 +110,11 @@ const Home = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        console.log('API Response:', response.data);
         if (response.data && response.data.length > 0) {
           setWaterData(response.data);
           setError('');
         } else {
           setWaterData([]);
-          // setError('ไม่พบข้อมูลคุณภาพน้ำสำหรับอุปกรณ์นี้'); // ไม่ต้องแสดง error แดงๆ แค่กราฟว่างๆ ก็พอ
         }
       } catch (err) {
         setError(
@@ -129,6 +141,7 @@ const Home = () => {
       );
       if (response.status === 200) {
         localStorage.removeItem('token');
+        localStorage.removeItem('lastSelectedDevice'); // 🚀 ล้างค่าที่จำไว้เมื่อ Logout
         navigate('/login');
       } else {
         alert('การออกจากระบบล้มเหลว');
@@ -241,7 +254,12 @@ const Home = () => {
     >
       <header className="header">
         <nav className="nav">
-          <a href="/water-quality"><BarChart size={18} /> ข้อมูลคุณภาพน้ำ</a>
+          <a href="/water-quality?deviceId=${selectedDeviceId}" onClick={(e) => {
+             e.preventDefault();
+             // ส่ง deviceId ไปด้วยเพื่อให้หน้า water-quality แสดงข้อมูลของอุปกรณ์ที่เลือกอยู่
+             navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality');
+          }}><BarChart size={18} /> ข้อมูลคุณภาพน้ำ</a>
+          
           <a href="#about" onClick={(e) => {
             e.preventDefault();
             openModal('ℹ️ เกี่ยวกับเรา', 'ฟาร์มกุ้งก้ามกรามคุณภาพสูง...');
@@ -344,7 +362,7 @@ const Home = () => {
             </button>
 
             {devices.length > 0 && (
-              <button className="action-btn" onClick={() => navigate(`/water-quality?deviceId=${selectedDeviceId}`)}>
+              <button className="action-btn" onClick={() => navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality')}>
                 <Search size={20} /> ดูข้อมูลย้อนหลัง
               </button>
             )}
