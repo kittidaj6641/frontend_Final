@@ -1,7 +1,7 @@
-// water-quality.js
+// src/water-quality.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom'; // เพิ่ม useSearchParams
 import { motion } from 'framer-motion';
 import config from './config';
 import './water-quality.css';
@@ -19,7 +19,10 @@ const WaterQuality = () => {
   const [waterData, setWaterData] = useState([]);
   const [error, setError] = useState('');
   const [modalData, setModalData] = useState({ isOpen: false, column: '', data: [] });
+  
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // ใช้งาน searchParams
+  const deviceId = searchParams.get('deviceId'); // ดึงค่า deviceId จาก URL
 
   useEffect(() => {
     document.body.style.background = 'linear-gradient(135deg, #a1c4fd, #c2e9fb)';
@@ -36,8 +39,13 @@ const WaterQuality = () => {
       }
 
       try {
+        // ตรวจสอบว่ามี deviceId หรือไม่ ถ้ามีให้ใส่ใน Query Params
+        const url = deviceId 
+          ? `${config.API_BASE_URL}/member/water-quality?deviceId=${deviceId}`
+          : `${config.API_BASE_URL}/member/water-quality`;
+
         const response = await axios.get(
-          `${config.API_BASE_URL}/member/water-quality`,
+          url,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setWaterData(response.data);
@@ -64,7 +72,7 @@ const WaterQuality = () => {
       document.body.style.margin = '';
       document.body.style.fontFamily = '';
     };
-  }, [navigate]);
+  }, [navigate, deviceId]); // เพิ่ม deviceId ใน dependency array
 
   const handleLogout = async () => {
     const token = localStorage.getItem('token');
@@ -169,6 +177,9 @@ const WaterQuality = () => {
       className="container"
     >
       <h1>ข้อมูลคุณภาพน้ำ - ฟาร์มกุ้งก้ามกราม</h1>
+      {/* แสดง Device ID ที่กำลังดูอยู่ */}
+      {deviceId && <h3 style={{ textAlign: 'center', color: '#555' }}>อุปกรณ์: {deviceId}</h3>}
+      
       {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
 
       <div className="dashboard">
@@ -237,7 +248,7 @@ const WaterQuality = () => {
             </div>
           </>
         ) : (
-          <p style={{ textAlign: 'center', color: '#666' }}>ไม่มีข้อมูล</p>
+          <p style={{ textAlign: 'center', color: '#666' }}>ไม่มีข้อมูลสำหรับอุปกรณ์นี้</p>
         )}
       </div>
 
