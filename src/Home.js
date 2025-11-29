@@ -36,14 +36,14 @@ const Home = () => {
   const [waterData, setWaterData] = useState([]);
   const [error, setError] = useState('');
 
-  // 🚀 แก้ไข 1: โหลดค่า Device ที่เลือกล่าสุดจาก localStorage ถ้ามี
+  // 🚀 โหลดค่า Device ที่เลือกล่าสุดจาก localStorage ถ้ามี
   const [devices, setDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState(
     localStorage.getItem('lastSelectedDevice') || ''
   );
   const [loadingDevices, setLoadingDevices] = useState(true);
 
-  // 🚀 แก้ไข 2: บันทึกค่าลง localStorage ทุกครั้งที่เปลี่ยนอุปกรณ์
+  // 🚀 บันทึกค่าลง localStorage ทุกครั้งที่เปลี่ยนอุปกรณ์
   useEffect(() => {
     if (selectedDeviceId) {
       localStorage.setItem('lastSelectedDevice', selectedDeviceId);
@@ -70,7 +70,7 @@ const Home = () => {
         if (response.data && response.data.length > 0) {
           setDevices(response.data);
 
-          // 🚀 แก้ไข 3: ตรวจสอบว่า Device ที่จำไว้ (จาก localStorage) ยังมีอยู่ในรายการหรือไม่
+          // 🚀 ตรวจสอบว่า Device ที่จำไว้ (จาก localStorage) ยังมีอยู่ในรายการหรือไม่
           // ถ้าไม่มี หรือยังไม่ได้เลือก ให้ Default เป็นตัวแรก
           const currentDeviceExists = response.data.some(d => d.device_id === selectedDeviceId);
           
@@ -95,7 +95,7 @@ const Home = () => {
       document.body.style.margin = '';
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]); // เอา selectedDeviceId ออกจาก dependency ของ fetchDevices เพื่อป้องกัน loop
+  }, [navigate]); 
 
   // 2. ดึงข้อมูลคุณภาพน้ำเมื่อ selectedDeviceId เปลี่ยน
   useEffect(() => {
@@ -254,9 +254,9 @@ const Home = () => {
     >
       <header className="header">
         <nav className="nav">
-          <a href="/water-quality?deviceId=${selectedDeviceId}" onClick={(e) => {
+          {/* ✅ แก้ไขตรงนี้: เปลี่ยน href="..." เป็น href={`...`} */}
+          <a href={`/water-quality?deviceId=${selectedDeviceId}`} onClick={(e) => {
              e.preventDefault();
-             // ส่ง deviceId ไปด้วยเพื่อให้หน้า water-quality แสดงข้อมูลของอุปกรณ์ที่เลือกอยู่
              navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality');
           }}><BarChart size={18} /> ข้อมูลคุณภาพน้ำ</a>
           
