@@ -75,7 +75,6 @@ const WaterQuality = () => {
     return () => clearInterval(intervalId);
   }, [navigate, deviceId]);
 
-  // ฟังก์ชันวิเคราะห์ค่าความผิดปกติ (เอา salinity ออก)
   const checkQuality = (type, value) => {
     if (value === null || value === undefined) return { status: 'unknown', msg: '-' };
     
@@ -89,18 +88,14 @@ const WaterQuality = () => {
     const rule = rules[type];
     if (!rule) return { status: 'normal', msg: 'ปกติ' };
 
-    if (value < rule.min) {
-        return { status: 'warning', msg: `ต่ำเกินไป (<${rule.min})` };
-    }
-    if (value > rule.max) {
-        return { status: 'warning', msg: `สูงเกินไป (>${rule.max})` };
-    }
+    if (value < rule.min) return { status: 'warning', msg: `ต่ำ (<${rule.min})` }; // ย่อคำให้สั้นลงเพื่อมือถือ
+    if (value > rule.max) return { status: 'warning', msg: `สูง (>${rule.max})` }; // ย่อคำให้สั้นลงเพื่อมือถือ
     return { status: 'normal', msg: 'ปกติ' };
   };
 
   const latest = waterData.length > 0 ? waterData[0] : {};
 
-  // ข้อมูลสำหรับกราฟ (เอา salinity ออก)
+  // ข้อมูลสำหรับกราฟ
   const chartData = [...waterData].reverse().map(item => ({
       time: new Date(item.recorded_at).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}),
       ph: item.ph,
@@ -109,12 +104,11 @@ const WaterQuality = () => {
       turbidity: item.turbidity
   }));
 
-  // ตัวเลือกกราฟ (เอา salinity ออก)
   const parameters = [
     { key: 'dissolved_oxygen', label: 'ออกซิเจน (DO)', color: '#0088FE' },
     { key: 'ph', label: 'ค่า pH', color: '#8884d8' },
     { key: 'temperature', label: 'อุณหภูมิ', color: '#FF8042' },
-    { key: 'turbidity', label: 'ความขุ่น (Turbidity)', color: '#82ca9d' }
+    { key: 'turbidity', label: 'ความขุ่น', color: '#82ca9d' }
   ];
 
   const StatCard = ({ icon: Icon, label, value, unit, type }) => {
@@ -133,14 +127,16 @@ const WaterQuality = () => {
       <header className="page-header">
         <div className="header-left">
             <button className="back-btn" onClick={() => navigate('/')}>
-                <ArrowLeft size={20} /> กลับหน้าหลัก
+                <ArrowLeft size={18} /> กลับ
             </button>
-            <h2 style={{margin:0}}>ข้อมูลย้อนหลัง</h2>
+            <div className="header-title">
+                <h2>ข้อมูลย้อนหลัง</h2>
+            </div>
         </div>
 
         <div className="device-selector">
-            <span style={{fontWeight:'bold', color:'#555'}}>📡 อุปกรณ์:</span>
-            <div style={{position:'relative'}}>
+            <span style={{fontWeight:'bold', color:'#555', fontSize:'14px'}}>📡</span>
+            <div style={{position:'relative', width:'100%'}}>
                 <select 
                     className="device-select"
                     value={deviceId || ''}
@@ -150,32 +146,31 @@ const WaterQuality = () => {
                         <option key={d.device_id} value={d.device_id}>{d.device_name}</option>
                     ))}
                 </select>
-                <ChevronDown size={14} style={{position:'absolute', right:0, top:'50%', transform:'translateY(-50%)', pointerEvents:'none'}}/>
+                <ChevronDown size={14} style={{position:'absolute', right:0, top:'50%', transform:'translateY(-50%)', pointerEvents:'none', color:'#007bff'}}/>
             </div>
         </div>
       </header>
 
       {error && (
-        <div style={{background: '#ffebee', color: '#c62828', padding: '15px', borderRadius: '12px', marginBottom: '20px', display:'flex', gap:'10px'}}>
-          <AlertCircle size={24} /> {error}
+        <div style={{background: '#ffebee', color: '#c62828', padding: '15px', borderRadius: '12px', marginBottom: '20px', display:'flex', gap:'10px', fontSize:'14px'}}>
+          <AlertCircle size={20} /> {error}
         </div>
       )}
 
-      {/* Latest Stats Grid (เอา Salinity ออก) */}
       <section className="latest-stats-grid">
-         <StatCard icon={Wind} label="ออกซิเจน (DO)" value={latest.dissolved_oxygen} unit="mg/L" type="do" />
-         <StatCard icon={Droplets} label="ค่า pH" value={latest.ph} unit="" type="ph" />
-         <StatCard icon={Thermometer} label="อุณหภูมิ" value={latest.temperature} unit="°C" type="temp" />
-         <StatCard icon={Zap} label="ความขุ่น" value={latest.turbidity} unit="NTU" type="turbidity" />
+         <StatCard icon={Wind} label="DO" value={latest.dissolved_oxygen} unit="mg/L" type="do" />
+         <StatCard icon={Droplets} label="pH" value={latest.ph} unit="" type="ph" />
+         <StatCard icon={Thermometer} label="Temp" value={latest.temperature} unit="°C" type="temp" />
+         <StatCard icon={Zap} label="Turbidity" value={latest.turbidity} unit="NTU" type="turbidity" />
       </section>
 
       <section className="analysis-container">
         <div className="tabs">
             <button className={`tab-btn ${viewMode === 'chart' ? 'active' : ''}`} onClick={() => setViewMode('chart')}>
-                <Activity size={18} /> กราฟแนวโน้ม
+                <Activity size={16} /> กราฟ
             </button>
             <button className={`tab-btn ${viewMode === 'table' ? 'active' : ''}`} onClick={() => setViewMode('table')}>
-                <Table size={18} /> ตารางข้อมูลดิบ
+                <Table size={16} /> ตาราง
             </button>
         </div>
 
@@ -183,9 +178,9 @@ const WaterQuality = () => {
             <div>
                 <div className="filter-bar">
                     <select 
+                        className="param-select"
                         value={selectedParam} 
                         onChange={(e) => setSelectedParam(e.target.value)}
-                        style={{padding:'8px', borderRadius:'6px', border:'1px solid #ddd'}}
                     >
                         {parameters.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
                     </select>
@@ -193,11 +188,11 @@ const WaterQuality = () => {
                 <div className="chart-wrapper">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="time" />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                            <XAxis dataKey="time" tick={{fontSize: 12}} />
+                            <YAxis tick={{fontSize: 12}} />
+                            <Tooltip wrapperStyle={{fontSize:'12px'}} />
+                            <Legend wrapperStyle={{fontSize:'12px'}} />
                             {parameters.map(p => (
                                 selectedParam === p.key && 
                                 <Line key={p.key} type="monotone" dataKey={selectedParam === 'dissolved_oxygen' ? 'do' : selectedParam === 'temperature' ? 'temp' : selectedParam} stroke={p.color} strokeWidth={3} name={p.label} dot={false} />
@@ -211,12 +206,12 @@ const WaterQuality = () => {
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th>วัน/เวลา</th>
-                            <th>DO (mg/L)</th>
+                            <th>เวลา</th>
+                            <th>DO</th>
                             <th>pH</th>
-                            <th>Temp (°C)</th>
-                            <th>Turbidity</th>
-                            <th>สถานะความผิดปกติ</th>
+                            <th>Temp</th>
+                            <th>Turbid</th>
+                            <th>สถานะ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -230,11 +225,11 @@ const WaterQuality = () => {
                             if(qDO.status === 'warning') alerts.push(`DO: ${qDO.msg}`);
                             if(qPH.status === 'warning') alerts.push(`pH: ${qPH.msg}`);
                             if(qTemp.status === 'warning') alerts.push(`Temp: ${qTemp.msg}`);
-                            if(qTurb.status === 'warning') alerts.push(`Turbidity: ${qTurb.msg}`);
+                            if(qTurb.status === 'warning') alerts.push(`Turbid: ${qTurb.msg}`);
 
                             return (
                                 <tr key={index}>
-                                    <td>{new Date(row.recorded_at).toLocaleString('th-TH')}</td>
+                                    <td>{new Date(row.recorded_at).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}</td>
                                     <td style={{color: qDO.status === 'warning' ? 'red' : 'inherit'}}>{row.dissolved_oxygen}</td>
                                     <td style={{color: qPH.status === 'warning' ? 'red' : 'inherit'}}>{row.ph}</td>
                                     <td style={{color: qTemp.status === 'warning' ? 'red' : 'inherit'}}>{row.temperature}</td>
@@ -242,7 +237,7 @@ const WaterQuality = () => {
                                     <td>
                                         {alerts.length > 0 ? (
                                             <span className="status-badge bg-danger">
-                                                {alerts.join(', ')}
+                                                {alerts[0]} {alerts.length > 1 && `+${alerts.length - 1}`}
                                             </span>
                                         ) : (
                                             <span className="status-badge bg-success">ปกติ</span>
