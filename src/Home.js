@@ -1,11 +1,11 @@
 // src/home.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react'; // <--- 1. เพิ่ม useCallback
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import config from './config';
-import { checkQuality } from './waterStandard'; // <--- เรียกใช้มาตรฐานกลาง
-import './Home.css'; // (ถ้ามีไฟล์ CSS แยก)
+import { checkQuality } from './waterStandard';
+import './Home.css';
 import { 
   Wind, Droplets, Thermometer, Zap, 
   AlertTriangle, CheckCircle, ChevronRight 
@@ -16,14 +16,8 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // 1. โหลดข้อมูลและตั้งเวลา Refresh
-  useEffect(() => {
-    fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 30000); // อัปเดตทุก 30 วินาที
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchDashboardData = async () => {
+  // 2. ใช้ useCallback คลุมฟังก์ชันนี้ไว้ เพื่อไม่ให้มันถูกสร้างใหม่ทุกครั้งที่ render
+  const fetchDashboardData = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
@@ -40,23 +34,27 @@ const Home = () => {
       console.error("Failed to load dashboard data", err);
       setLoading(false);
     }
-  };
+  }, [navigate]); // <--- dependency คือ navigate (ถ้า navigate เปลี่ยน ฟังก์ชันจะสร้างใหม่)
 
-  // 2. ฟังก์ชันเช็คภาพรวมของบ่อ (Device Overall Status)
+  // 3. เรียกใช้ใน useEffect และใส่ dependency ให้ครบ
+  useEffect(() => {
+    fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 30000); 
+    return () => clearInterval(interval);
+  }, [fetchDashboardData]); // <--- ใส่ fetchDashboardData ได้แล้ว เพราะมี useCallback กัน Loop ไว้แล้ว
+
+  // ฟังก์ชันเช็คภาพรวมของบ่อ (Device Overall Status)
   const getDeviceStatus = (device) => {
-    // ดึงค่าล่าสุดมาเช็ค (รองรับทั้ง key ที่มี 'latest_' และไม่มี)
     const valDO = device.latest_dissolved_oxygen || device.dissolved_oxygen;
     const valPH = device.latest_ph || device.ph;
     const valTemp = device.latest_temperature || device.temperature;
     const valTurb = device.latest_turbidity || device.turbidity;
 
-    // ใช้ logic กลางเช็คทีละค่า
     const qDO = checkQuality('do', valDO);
     const qPH = checkQuality('ph', valPH);
     const qTemp = checkQuality('temp', valTemp);
     const qTurb = checkQuality('turbidity', valTurb);
     
-    // ถ้ามีค่าใดค่าหนึ่ง "Warning" -> บ่อนั้นสถานะ "ผิดปกติ" ทันที
     if (qDO.status === 'warning' || qPH.status === 'warning' || qTemp.status === 'warning' || qTurb.status === 'warning') {
         return { status: 'warning', label: 'ผิดปกติ', color: '#dc3545', icon: AlertTriangle, bgColor: '#ffebee', borderColor: '#dc3545' };
     }
@@ -91,11 +89,9 @@ const Home = () => {
       {/* Grid แสดงการ์ดแต่ละอุปกรณ์ */}
       <div className="device-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
         {devices.map((device) => {
-          // คำนวณสถานะภาพรวม
           const overall = getDeviceStatus(device);
           const StatusIcon = overall.icon;
 
-          // ดึงค่าและเช็คสถานะรายตัว (เพื่อเอาไปทำสีตัวเลข)
           const valDO = device.latest_dissolved_oxygen || device.dissolved_oxygen;
           const valPH = device.latest_ph || device.ph;
           const valTemp = device.latest_temperature || device.temperature;
@@ -117,12 +113,11 @@ const Home = () => {
                 borderRadius: '16px', 
                 padding: '20px', 
                 boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-                border: `2px solid ${overall.borderColor}`, // สีขอบเปลี่ยนตามสถานะ
+                border: `2px solid ${overall.borderColor}`, 
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
             >
-              {/* Card Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', paddingBottom: '10px', borderBottom:'1px solid #f0f0f0' }}>
                 <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold', color: '#333' }}>{device.device_name}</h3>
                 <span style={{ 
@@ -135,7 +130,6 @@ const Home = () => {
                 </span>
               </div>
 
-              {/* Values Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                 
                 {/* DO */}
@@ -184,7 +178,6 @@ const Home = () => {
 
               </div>
 
-              {/* Action Link */}
               <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #f9f9f9', display:'flex', justifyContent:'flex-end' }}>
                 <span style={{ fontSize: '0.85rem', color: '#007bff', display:'flex', alignItems:'center', gap:'2px', fontWeight:'500' }}>
                     ดูประวัติย้อนหลัง <ChevronRight size={16}/>
