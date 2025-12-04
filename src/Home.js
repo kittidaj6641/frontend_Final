@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import config from './config';
 import { checkQuality } from './waterStandard'; // <--- เรียกใช้มาตรฐานกลาง
-import './home.css'; // (ถ้ามีไฟล์ CSS แยก)
+import './Home.css'; // (ถ้ามีไฟล์ CSS แยก)
 import { 
   Wind, Droplets, Thermometer, Zap, 
   AlertTriangle, CheckCircle, ChevronRight 
