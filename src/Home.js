@@ -211,7 +211,7 @@ const Home = () => {
             <div className="section-title">เมนูด่วน</div>
             <div className="menu-grid">
               <button className="menu-btn btn-primary" onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}>
-                <Activity size={20}/> กราฟ Realtime
+                <Activity size={20}/> ข้อมูล Realtime Parameter
               </button>
               <button className="menu-btn btn-outline" onClick={() => navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality')}>
                 <Search size={20}/> ประวัติย้อนหลัง
