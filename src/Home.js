@@ -4,10 +4,10 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  BarChart2, Info, Phone, LogOut, Search,
+  Info, LogOut, Search,
   AlertTriangle, Clock, Activity, PlusCircle,
   ChevronDown, Droplets, Thermometer, Wind, Zap
-} from 'lucide-react'; // นำเข้า icon เพิ่มเติม
+} from 'lucide-react';
 
 import config from './config';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -83,19 +83,34 @@ const Home = () => {
     fetchWaterQuality();
   }, [selectedDeviceId]);
 
-  const handleLogout = async () => { /* ...Logic เดิม... */ 
-      localStorage.removeItem('token');
-      localStorage.removeItem('lastSelectedDevice');
-      navigate('/login');
+  const handleLogout = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.post(
+        `${config.API_BASE_URL}/member/logout`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (response.status === 200) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('lastSelectedDevice');
+        navigate('/login');
+      } else {
+        alert('การออกจากระบบล้มเหลว');
+      }
+    } catch (error) {
+      alert('เกิดข้อผิดพลาดในการออกจากระบบ');
+      console.error(error);
+    }
   };
 
-  // Helper Functions (เหมือนเดิม หรือปรับปรุงเล็กน้อย)
   const openModal = (title, content) => setModal({ isOpen: true, title, content });
   const closeModal = () => setModal({ isOpen: false, title: '', content: '' });
 
   const latestData = waterData.length > 0 ? waterData[0] : {};
   
-  // แปลงข้อมูลกราฟ
   const chartData = latestData.device_id ? [
     { name: 'pH', value: Number(latestData.ph) || 0 },
     { name: 'DO', value: Number(latestData.dissolved_oxygen) || 0 },
@@ -105,14 +120,12 @@ const Home = () => {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-  // ฟังก์ชันช่วยประเมินสถานะเพื่อแสดงสี
   const getStatusColor = (val, min, max) => {
     if (!val) return 'status-normal';
     if (val < min || val > max) return 'status-danger';
     return 'status-normal';
   };
 
-  // --- ส่วน Components ย่อย เพื่อความสะอาดของโค้ด ---
   const StatCard = ({ title, value, unit, icon: Icon, statusClass }) => (
     <motion.div whileHover={{ scale: 1.02 }} className="stat-card">
       <div className="stat-header">
@@ -129,13 +142,11 @@ const Home = () => {
 
   return (
     <div className="home-page">
-      {/* 1. Header แบบ Clean */}
       <header className="header">
         <div className="brand-logo">
           <Droplets size={24} fill="#007bff" /> ShrimpFarm AI
         </div>
         <nav className="nav">
-          {/* ซ่อนลิงก์พวกนี้ในจอมือถือได้ถ้าต้องการ */}
           <a href="#about" className="nav-link" onClick={(e)=>{e.preventDefault(); openModal('เกี่ยวกับเรา', 'ฟาร์มกุ้งยุคใหม่...')}}>เกี่ยวกับ</a>
           
           <button className="btn-icon" onClick={() => openModal('แจ้งเตือน', 'ยังไม่มีการแจ้งเตือนใหม่')} title="การแจ้งเตือน">
@@ -151,7 +162,6 @@ const Home = () => {
       </header>
 
       <main className="dashboard-container">
-        {/* 2. Welcome & Controls */}
         <section className="controls-section">
           <div className="welcome-text">
             <h1>สวัสดีครับ, เจ้าของฟาร์ม 👋</h1>
@@ -179,7 +189,6 @@ const Home = () => {
 
         {error && <div style={{padding: '20px', background:'#ffebee', color:'#c62828', borderRadius:'10px', marginBottom:'20px'}}>{error}</div>}
 
-        {/* 3. Stats Grid (แสดงค่าแยกเป็นการ์ด) */}
         {latestData.device_id ? (
           <div className="stats-grid">
             <StatCard 
@@ -211,9 +220,7 @@ const Home = () => {
           <div style={{textAlign:'center', padding:'40px', color:'#999'}}>รอข้อมูลจากเซ็นเซอร์...</div>
         )}
 
-        {/* 4. Chart & Actions Layout */}
         <div className="main-grid">
-          {/* Chart Section */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -241,7 +248,6 @@ const Home = () => {
             </div>
           </motion.div>
 
-          {/* Actions Section */}
           <div className="actions-card">
             <div className="section-title">เมนูด่วน</div>
             
@@ -264,7 +270,6 @@ const Home = () => {
         </div>
       </main>
 
-      {/* Modal */}
       {modal.isOpen && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
