@@ -1,315 +1,288 @@
-/* รีเซ็ต margin และ padding */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* src/Home.css */
+:root {
+  --primary-color: #007bff; /* สีหลัก (ฟ้า) */
+  --secondary-color: #6c757d; /* สีรอง (เทา) */
+  --success-color: #28a745; /* สีสถานะปกติ (เขียว) */
+  --warning-color: #ffc107; /* สีแจ้งเตือน (เหลือง) */
+  --danger-color: #dc3545; /* สีอันตราย (แดง) */
+  --bg-color: #f4f6f9; /* สีพื้นหลังโทนสบายตา */
+  --card-bg: #ffffff; /* สีพื้นหลังการ์ด */
+  --text-color: #333333;
+  --text-muted: #666666;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+body {
+  background-color: var(--bg-color);
+  font-family: 'Sarabun', 'Roboto', sans-serif; /* แนะนำให้ใช้ font ที่อ่านไทยง่าย */
 }
 
 .home-page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ส่วนหัว */
+/* --- Header & Navigation --- */
 .header {
-    background-color: #1E90FF;
-    padding: 10px 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+  background: white;
+  padding: 15px 30px;
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand-logo {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .nav {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end; /* ชิดขวา */
-    gap: 12px; /* ปรับระยะห่างระหว่างปุ่ม (จาก 15px เป็น 12px เพื่อให้สอดคล้องกับ margin-right เดิม) */
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
-.nav a {
-    color: white;
-    text-decoration: none;
-    font-size: 16px;
-    font-weight: bold;
-    transition: color 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+.nav-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.2s;
 }
 
-.nav a:hover {
-    color: #C2E9FB;
+.nav-link:hover {
+  color: var(--primary-color);
 }
 
-/* ปุ่มใน nav (logout-btn, alert-btn, history-btn) */
-.logout-btn, .alert-btn, .history-btn {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: auto;
-    min-width: 80px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px; /* ปรับ gap ระหว่างไอคอนและข้อความ (จาก 1px เป็น 8px เพื่อให้สอดคล้องกับหน้า ShrimpInfo) */
+.btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: all 0.2s;
 }
 
-.logout-btn:hover, .alert-btn:hover, .history-btn:hover {
-    background-color: #d32f2f;
-    transform: translateY(-2px);
+.btn-icon:hover {
+  background-color: #f0f0f0;
+  color: var(--primary-color);
 }
 
-.logout-btn:active, .alert-btn:active, .history-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+.btn-icon.danger:hover {
+  background-color: #ffebee;
+  color: var(--danger-color);
 }
 
-/* ส่วนเนื้อหาหลัก */
-.main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    min-height: calc(100vh - 60px);
+/* --- Main Dashboard --- */
+.dashboard-container {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-/* ด้านซ้าย (รูปภาพพื้นหลัง) */
-.content-left {
-    flex: 1;
-    background-image: url('background/IMG_9462 ก้ามกราม01 (1).JPG');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+/* Section: Controls (Device Selector) */
+.controls-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-/* ด้านขวา (ข้อความและปุ่ม) */
-.content-right {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background-color: #fff;
-    padding: 40px;
-    text-align: center;
-    position: relative;
+.welcome-text h1 {
+  font-size: 24px;
+  color: var(--text-color);
+  margin-bottom: 5px;
 }
 
-.content-right h1 {
-    font-size: 36px;
-    color: #333;
-    margin-bottom: 10px;
-    margin-top: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.welcome-text p {
+  color: var(--text-muted);
+  font-size: 14px;
 }
 
-.content-right h2 {
-    font-size: 24px;
-    color: #1E90FF;
-    margin-bottom: 20px;
+.device-selector-wrapper {
+  background: white;
+  padding: 5px 15px;
+  border-radius: 50px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #eee;
 }
 
-.content-right p {
-    font-size: 18px;
-    color: #666;
-    margin-bottom: 30px;
-    line-height: 1.5;
+.device-select {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--primary-color);
+  outline: none;
+  padding: 8px;
+  cursor: pointer;
 }
 
-/* กลุ่มปุ่ม */
-.button-group {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
+/* Section: Stats Grid (Cards) */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
 }
 
-.action-btn {
-    background-color: #1E90FF;
-    color: white;
-    border: none;
-    padding: 15px 20px;
-    border-radius: 5px;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+.stat-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
-.action-btn:hover {
-    background-color: #1C86EE;
-    transform: translateY(-2px);
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
 }
 
-/* ปรับสำหรับ PieChart */
-div[style*="maxWidth: 400"] {
-    width: 100%;
-    max-width: 400px;
-    height: 350px;
-    margin-bottom: 20px;
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
 }
 
-/* Modal Styles */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+.stat-icon {
+  padding: 10px;
+  border-radius: 12px;
+  background: #e3f2fd;
+  color: var(--primary-color);
 }
 
-.modal {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    position: relative;
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-color);
 }
 
-.modal h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
+.stat-label {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 5px;
 }
 
-.modal-content {
-    font-size: 16px;
-    color: #666;
-    margin-bottom: 20px;
-    line-height: 1.5;
+.stat-status {
+  font-size: 12px;
+  margin-top: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
+}
+.status-normal { background: #e8f5e9; color: #2e7d32; }
+.status-warning { background: #fff3e0; color: #ef6c00; }
+.status-danger { background: #ffebee; color: #c62828; }
+
+/* Section: Charts & Actions */
+.main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* กราฟใหญ่ 2 ส่วน, ปุ่ม 1 ส่วน */
+  gap: 20px;
 }
 
-/* สไตล์ตารางสำหรับประวัติการล็อกอิน */
-.login-logs-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+.chart-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.login-logs-table th,
-.login-logs-table td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: left;
+.actions-card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.login-logs-table th {
-    background-color: #1E90FF;
-    color: white;
-    font-weight: bold;
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--text-color);
+  width: 100%;
 }
 
-.login-logs-table tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
+.action-btn-modern {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
 }
 
-.login-logs-table tbody tr:hover {
-    background-color: #f1f1f1;
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+.btn-primary:hover { background: #0056b3; transform: translateY(-2px); }
+
+.btn-success {
+  background: var(--success-color);
+  color: white;
+  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+}
+.btn-success:hover { background: #218838; transform: translateY(-2px); }
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid #eee;
+  color: var(--text-muted);
+}
+.btn-outline:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: #f8f9fa;
 }
 
-/* สไตล์สำหรับสถานะ */
-.status-online {
-    color: #28a745; /* สีเขียวสำหรับ online */
-    font-weight: bold;
-}
+/* Modal Styling (Optional tweaks) */
+.modal-overlay { backdrop-filter: blur(5px); }
+.modal { border-radius: 16px; border: none; }
 
-.status-offline {
-    color: #dc3545; /* สีแดงสำหรับ offline */
-    font-weight: bold;
-}
-
-.close-btn {
-    display: block;
-    width: 120px;
-    margin: 0 auto;
-    padding: 10px;
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-    background-color: #d32f2f;
-    transform: translateY(-2px);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .main-content {
-        flex-direction: column;
-    }
-
-    .content-left {
-        flex: none;
-        height: 200px;
-    }
-
-    .content-right {
-        padding: 20px;
-    }
-
-    .content-right h1 {
-        font-size: 28px;
-    }
-
-    .content-right h2 {
-        font-size: 20px;
-    }
-
-    .content-right p {
-        font-size: 16px;
-    }
-
-    .action-btn {
-        font-size: 16px;
-        padding: 12px 16px;
-    }
-
-    .nav {
-        justify-content: flex-end;
-        flex-wrap: wrap;
-        gap: 10px; /* ระยะห่างในหน้าจอเล็ก */
-    }
-
-    .nav a {
-        font-size: 14px;
-    }
-
-    .logout-btn, .alert-btn, .history-btn {
-        font-size: 12px;
-        padding: 6px 12px;
-        min-width: 70px;
-    }
-
-    .login-logs-table th,
-    .login-logs-table td {
-        padding: 8px;
-        font-size: 14px;
-    }
+/* Responsive */
+@media (max-width: 900px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .controls-section { flex-direction: column; align-items: flex-start; }
 }
