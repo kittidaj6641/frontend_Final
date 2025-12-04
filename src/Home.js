@@ -1,193 +1,263 @@
-// src/home.js
-import React, { useState, useEffect, useCallback } from 'react'; // <--- 1. เพิ่ม useCallback
+// src/Home.js
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import config from './config';
-import { checkQuality } from './waterStandard';
-import './Home.css';
-import { 
-  Wind, Droplets, Thermometer, Zap, 
-  AlertTriangle, CheckCircle, ChevronRight 
+import {
+  Info, LogOut, Search,
+  AlertTriangle, Clock, Activity, PlusCircle,
+  ChevronDown, Droplets, Thermometer, Wind, Zap, Fish
 } from 'lucide-react';
 
-const Home = () => {
-  const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+import config from './config';
+import { checkQuality } from './waterStandard'; // <--- 1. Import มาตรฐานกลาง
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import './Home.css';
 
-  // 2. ใช้ useCallback คลุมฟังก์ชันนี้ไว้ เพื่อไม่ให้มันถูกสร้างใหม่ทุกครั้งที่ render
-  const fetchDashboardData = useCallback(async () => {
+const Home = () => {
+  const navigate = useNavigate();
+  const [modal, setModal] = useState({ isOpen: false, title: '', content: '' });
+  const [waterData, setWaterData] = useState([]);
+  const [error, setError] = useState('');
+  const [devices, setDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(
+    localStorage.getItem('lastSelectedDevice') || ''
+  );
+  const [loadingDevices, setLoadingDevices] = useState(true);
+
+  // Load Devices
+  useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
       return;
     }
+    const fetchDevices = async () => {
+      try {
+        const response = await axios.get(`${config.API_BASE_URL}/member/devices`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.data && response.data.length > 0) {
+          setDevices(response.data);
+          const currentDeviceExists = response.data.some(d => d.device_id === selectedDeviceId);
+          if (!selectedDeviceId || !currentDeviceExists) {
+            setSelectedDeviceId(response.data[0].device_id);
+          }
+        } else {
+          setDevices([]);
+        }
+      } catch (err) {
+        console.error("Error fetching devices");
+      } finally {
+        setLoadingDevices(false);
+      }
+    };
+    fetchDevices();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
 
-    try {
-      const res = await axios.get(`${config.API_BASE_URL}/member/devices`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setDevices(res.data);
-      setLoading(false);
-    } catch (err) {
-      console.error("Failed to load dashboard data", err);
-      setLoading(false);
-    }
-  }, [navigate]); // <--- dependency คือ navigate (ถ้า navigate เปลี่ยน ฟังก์ชันจะสร้างใหม่)
-
-  // 3. เรียกใช้ใน useEffect และใส่ dependency ให้ครบ
+  // Save Device to LocalStorage
   useEffect(() => {
-    fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 30000); 
-    return () => clearInterval(interval);
-  }, [fetchDashboardData]); // <--- ใส่ fetchDashboardData ได้แล้ว เพราะมี useCallback กัน Loop ไว้แล้ว
+    if (selectedDeviceId) localStorage.setItem('lastSelectedDevice', selectedDeviceId);
+  }, [selectedDeviceId]);
 
-  // ฟังก์ชันเช็คภาพรวมของบ่อ (Device Overall Status)
-  const getDeviceStatus = (device) => {
-    const valDO = device.latest_dissolved_oxygen || device.dissolved_oxygen;
-    const valPH = device.latest_ph || device.ph;
-    const valTemp = device.latest_temperature || device.temperature;
-    const valTurb = device.latest_turbidity || device.turbidity;
+  // Load Water Data
+  useEffect(() => {
+    if (!selectedDeviceId) return;
+    const token = localStorage.getItem('token');
+    const fetchWaterQuality = async () => {
+      try {
+        const response = await axios.get(
+          `${config.API_BASE_URL}/member/water-quality?deviceId=${selectedDeviceId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setWaterData(response.data || []);
+        setError('');
+      } catch (err) {
+        setError('ไม่สามารถดึงข้อมูลคุณภาพน้ำได้');
+      }
+    };
+    fetchWaterQuality();
+  }, [selectedDeviceId]);
 
-    const qDO = checkQuality('do', valDO);
-    const qPH = checkQuality('ph', valPH);
-    const qTemp = checkQuality('temp', valTemp);
-    const qTurb = checkQuality('turbidity', valTurb);
-    
-    if (qDO.status === 'warning' || qPH.status === 'warning' || qTemp.status === 'warning' || qTurb.status === 'warning') {
-        return { status: 'warning', label: 'ผิดปกติ', color: '#dc3545', icon: AlertTriangle, bgColor: '#ffebee', borderColor: '#dc3545' };
+  const handleLogout = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(`${config.API_BASE_URL}/member/logout`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      localStorage.removeItem('token');
+      localStorage.removeItem('lastSelectedDevice');
+      navigate('/login');
+    } catch (error) {
+      alert('ออกจากระบบล้มเหลว หรือ Session หมดอายุ');
+      localStorage.removeItem('token');
+      navigate('/login');
     }
-    return { status: 'normal', label: 'ปกติ', color: '#28a745', icon: CheckCircle, bgColor: '#e8f5e9', borderColor: '#e0e0e0' };
   };
 
-  if (loading) {
-    return <div style={{padding:'40px', textAlign:'center', color:'#666'}}>กำลังโหลดข้อมูล...</div>;
-  }
+  const openModal = (title, content) => setModal({ isOpen: true, title, content });
+  const closeModal = () => setModal({ isOpen: false, title: '', content: '' });
+
+  // Data Processing
+  const latest = waterData.length > 0 ? waterData[0] : {};
+  
+  // 2. คำนวณคุณภาพน้ำโดยใช้ฟังก์ชันจาก waterStandard.js
+  const qPH = checkQuality('ph', latest.ph);
+  const qDO = checkQuality('do', latest.dissolved_oxygen);
+  const qTemp = checkQuality('temp', latest.temperature);
+  const qTurb = checkQuality('turbidity', latest.turbidity);
+
+  const chartData = latest.device_id ? [
+    { name: 'pH', value: Number(latest.ph) || 0 },
+    { name: 'DO', value: Number(latest.dissolved_oxygen) || 0 },
+    { name: 'Temp', value: Number(latest.temperature) || 0 },
+  ] : [];
+  const COLORS = ['#0088FE', '#00C49F', '#FF8042'];
 
   return (
-    <div className="home-container" style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Sarabun, sans-serif' }}>
-      
-      {/* Header ส่วนบน */}
-      <header style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ margin: 0, fontSize: '1.5rem', color: '#333' }}>ภาพรวมฟาร์ม</h1>
-          <p style={{ margin: 0, color: '#666', fontSize: '0.9rem' }}>สถานะคุณภาพน้ำปัจจุบัน (Real-time)</p>
+    <div className="home-page">
+      {/* Header */}
+      <header className="header">
+        <div className="brand-logo">
+          <Fish size={24} color="#007bff" /> ShrimpFarm AI
         </div>
-        <button 
-            onClick={() => { setLoading(true); fetchDashboardData(); }}
-            style={{ 
-                background: '#fff', border: '1px solid #ddd', padding: '8px 15px', 
-                borderRadius: '20px', cursor: 'pointer', fontSize:'0.85rem',
-                display: 'flex', alignItems: 'center', gap: '5px', color: '#555'
-            }}
-        >
-            รีเฟรช
-        </button>
+        <nav className="nav">
+          <button className="nav-btn" onClick={() => openModal('เกี่ยวกับ', 'ระบบจัดการฟาร์มกุ้งอัจฉริยะ V1.0')}><Info size={22}/></button>
+          <button className="nav-btn" onClick={() => navigate('/login-logs')}><Clock size={22}/></button>
+          <button className="nav-btn danger" onClick={handleLogout}><LogOut size={22}/></button>
+        </nav>
       </header>
 
-      {/* Grid แสดงการ์ดแต่ละอุปกรณ์ */}
-      <div className="device-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-        {devices.map((device) => {
-          const overall = getDeviceStatus(device);
-          const StatusIcon = overall.icon;
-
-          const valDO = device.latest_dissolved_oxygen || device.dissolved_oxygen;
-          const valPH = device.latest_ph || device.ph;
-          const valTemp = device.latest_temperature || device.temperature;
-          const valTurb = device.latest_turbidity || device.turbidity;
-
-          const qDO = checkQuality('do', valDO);
-          const qPH = checkQuality('ph', valPH);
-          const qTemp = checkQuality('temp', valTemp);
-          const qTurb = checkQuality('turbidity', valTurb);
-
-          return (
-            <motion.div 
-              key={device.device_id}
-              whileHover={{ y: -5, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
-              className="device-card"
-              onClick={() => navigate(`/water-quality?deviceId=${device.device_id}`)}
-              style={{ 
-                background: 'white', 
-                borderRadius: '16px', 
-                padding: '20px', 
-                boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-                border: `2px solid ${overall.borderColor}`, 
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', paddingBottom: '10px', borderBottom:'1px solid #f0f0f0' }}>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 'bold', color: '#333' }}>{device.device_name}</h3>
-                <span style={{ 
-                    display: 'flex', alignItems: 'center', gap: '5px', 
-                    background: overall.bgColor,
-                    color: overall.color,
-                    padding: '4px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold'
-                }}>
-                    <StatusIcon size={14} /> {overall.label}
-                </span>
+      <main className="dashboard-container">
+        {/* Controls */}
+        <section className="controls-section">
+          <div className="welcome-text">
+            <h1>สวัสดีครับ 👋</h1>
+            <p>ดูภาพรวมฟาร์มของคุณวันนี้</p>
+          </div>
+          
+          {!loadingDevices && (
+            <div className="device-wrapper">
+              <span style={{color:'#888', fontSize:'14px'}}>📡</span>
+              <div style={{position:'relative', width:'100%'}}>
+                <select 
+                  className="device-select"
+                  value={selectedDeviceId}
+                  onChange={(e) => setSelectedDeviceId(e.target.value)}
+                >
+                  {devices.map(d => (
+                    <option key={d.device_id} value={d.device_id}>{d.device_name}</option>
+                  ))}
+                </select>
               </div>
+              <ChevronDown size={16} color="#007bff"/>
+            </div>
+          )}
+        </section>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                
-                {/* DO */}
-                <div className="sensor-item">
-                    <div style={{display:'flex', alignItems:'center', gap:'5px', color:'#666', fontSize:'0.85rem', marginBottom:'2px'}}>
-                        <Wind size={14}/> DO
-                    </div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: qDO.color }}>
-                        {valDO !== null ? valDO : '-'} <span style={{fontSize:'0.8rem', color:'#999', fontWeight:'normal'}}>mg/L</span>
-                    </div>
-                    {qDO.status === 'warning' && <small style={{color: qDO.color, fontSize:'0.75rem'}}>⚠️ {qDO.msg}</small>}
-                </div>
+        {error && <div style={{padding:'15px', background:'#ffebee', color:'#c62828', borderRadius:'10px', marginBottom:'20px', display:'flex', gap:'10px', alignItems:'center'}}><AlertTriangle size={18}/> {error}</div>}
 
-                {/* pH */}
-                <div className="sensor-item">
-                    <div style={{display:'flex', alignItems:'center', gap:'5px', color:'#666', fontSize:'0.85rem', marginBottom:'2px'}}>
-                        <Droplets size={14}/> pH
-                    </div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: qPH.color }}>
-                        {valPH !== null ? valPH : '-'}
-                    </div>
-                    {qPH.status === 'warning' && <small style={{color: qPH.color, fontSize:'0.75rem'}}>⚠️ {qPH.msg}</small>}
-                </div>
+        {/* Stats Grid - 3. ใช้ค่าที่คำนวณมาแสดงผล */}
+        <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} className="stats-grid">
+          
+          {/* pH Card */}
+          <div className={`stat-card ${qPH.status}`} style={{borderColor: qPH.status === 'warning' ? qPH.color : ''}}>
+            <div className="stat-icon"><Droplets size={20} color={qPH.status === 'warning' ? qPH.color : '#555'}/></div>
+            <div className="stat-value" style={{color: qPH.color}}>{latest.ph || '-'}</div>
+            <div className="stat-label">
+                ค่า pH <br/>
+                {qPH.status === 'warning' && <small style={{color: qPH.color, fontWeight:'bold'}}>{qPH.msg}</small>}
+            </div>
+          </div>
 
-                {/* Temp */}
-                <div className="sensor-item">
-                    <div style={{display:'flex', alignItems:'center', gap:'5px', color:'#666', fontSize:'0.85rem', marginBottom:'2px'}}>
-                        <Thermometer size={14}/> Temp
-                    </div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: qTemp.color }}>
-                        {valTemp !== null ? valTemp : '-'} <span style={{fontSize:'0.8rem', color:'#999', fontWeight:'normal'}}>°C</span>
-                    </div>
-                    {qTemp.status === 'warning' && <small style={{color: qTemp.color, fontSize:'0.75rem'}}>⚠️ {qTemp.msg}</small>}
-                </div>
+          {/* DO Card */}
+          <div className={`stat-card ${qDO.status}`} style={{borderColor: qDO.status === 'warning' ? qDO.color : ''}}>
+            <div className="stat-icon"><Wind size={20} color={qDO.status === 'warning' ? qDO.color : '#555'}/></div>
+            <div className="stat-value" style={{color: qDO.color}}>{latest.dissolved_oxygen || '-'} <span className="stat-unit">mg/L</span></div>
+            <div className="stat-label">
+                ออกซิเจน (DO) <br/>
+                {qDO.status === 'warning' && <small style={{color: qDO.color, fontWeight:'bold'}}>{qDO.msg}</small>}
+            </div>
+          </div>
 
-                {/* Turbidity */}
-                <div className="sensor-item">
-                    <div style={{display:'flex', alignItems:'center', gap:'5px', color:'#666', fontSize:'0.85rem', marginBottom:'2px'}}>
-                        <Zap size={14}/> Turbid
-                    </div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: qTurb.color }}>
-                        {valTurb !== null ? valTurb : '-'} <span style={{fontSize:'0.8rem', color:'#999', fontWeight:'normal'}}>NTU</span>
-                    </div>
-                    {qTurb.status === 'warning' && <small style={{color: qTurb.color, fontSize:'0.75rem'}}>⚠️ {qTurb.msg}</small>}
-                </div>
+          {/* Temp Card */}
+          <div className={`stat-card ${qTemp.status}`} style={{borderColor: qTemp.status === 'warning' ? qTemp.color : ''}}>
+            <div className="stat-icon"><Thermometer size={20} color={qTemp.status === 'warning' ? qTemp.color : '#555'}/></div>
+            <div className="stat-value" style={{color: qTemp.color}}>{latest.temperature || '-'} <span className="stat-unit">°C</span></div>
+            <div className="stat-label">
+                อุณหภูมิ <br/>
+                {qTemp.status === 'warning' && <small style={{color: qTemp.color, fontWeight:'bold'}}>{qTemp.msg}</small>}
+            </div>
+          </div>
 
-              </div>
+          {/* Turbidity Card */}
+          <div className={`stat-card ${qTurb.status}`} style={{borderColor: qTurb.status === 'warning' ? qTurb.color : ''}}>
+            <div className="stat-icon"><Zap size={20} color={qTurb.status === 'warning' ? qTurb.color : '#555'}/></div>
+            <div className="stat-value" style={{color: qTurb.color}}>{latest.turbidity || '-'} <span className="stat-unit">NTU</span></div>
+            <div className="stat-label">
+                ความขุ่น <br/>
+                {qTurb.status === 'warning' && <small style={{color: qTurb.color, fontWeight:'bold'}}>{qTurb.msg}</small>}
+            </div>
+          </div>
 
-              <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #f9f9f9', display:'flex', justifyContent:'flex-end' }}>
-                <span style={{ fontSize: '0.85rem', color: '#007bff', display:'flex', alignItems:'center', gap:'2px', fontWeight:'500' }}>
-                    ดูประวัติย้อนหลัง <ChevronRight size={16}/>
-                </span>
-              </div>
+        </motion.div>
 
-            </motion.div>
-          );
-        })}
-      </div>
+        {/* Charts & Actions */}
+        <div className="main-grid">
+          {/* Chart */}
+          <div className="card-box">
+            <div className="section-title">สัดส่วนค่าคุณภาพน้ำ</div>
+            <div style={{width:'100%', height:250}}>
+              {latest.device_id ? (
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie data={chartData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36}/>
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{textAlign:'center', color:'#999', paddingTop:'80px'}}>ไม่มีข้อมูล</div>
+              )}
+            </div>
+          </div>
+
+          {/* Menu */}
+          <div className="card-box">
+            <div className="section-title">เมนูด่วน</div>
+            <div className="menu-grid">
+              <button className="menu-btn btn-primary" onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}>
+                <Activity size={20}/> กราฟ Realtime
+              </button>
+              <button className="menu-btn btn-outline" onClick={() => navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality')}>
+                <Search size={20}/> ประวัติย้อนหลัง
+              </button>
+              <button className="menu-btn btn-success" onClick={() => navigate('/add-device')}>
+                <PlusCircle size={20}/> เพิ่มอุปกรณ์
+              </button>
+              <button className="menu-btn btn-outline" onClick={() => navigate('/shrimp-info')}>
+                <Info size={20}/> ความรู้เรื่องกุ้ง
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Modal */}
+      {modal.isOpen && (
+        <div style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', background:'rgba(0,0,0,0.5)', zIndex:1000, display:'flex', justifyContent:'center', alignItems:'center'}} onClick={closeModal}>
+          <div style={{background:'white', padding:'25px', borderRadius:'16px', width:'90%', maxWidth:'400px'}} onClick={e => e.stopPropagation()}>
+            <h3 style={{marginTop:0}}>{modal.title}</h3>
+            <p>{modal.content}</p>
+            <button style={{width:'100%', padding:'10px', marginTop:'15px', background:'#eee', border:'none', borderRadius:'8px', cursor:'pointer'}} onClick={closeModal}>ปิด</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
