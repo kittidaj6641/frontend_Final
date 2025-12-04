@@ -252,7 +252,7 @@ const Home = () => {
             <div className="section-title">เมนูด่วน</div>
             
             <button className="action-btn-modern btn-primary" onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}>
-              <Activity size={20} /> ดู Realtime Graph
+              <Activity size={20} /> ดู Realtime Parameter
             </button>
             
             <button className="action-btn-modern btn-outline" onClick={() => navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality')}>
