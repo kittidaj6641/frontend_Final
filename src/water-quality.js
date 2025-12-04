@@ -39,15 +39,14 @@ const WaterQuality = () => {
           headers: { Authorization: `Bearer ${token}` } 
         });
         
-        // กลับด้านข้อมูลเพื่อให้กราฟแสดงจาก อดีต -> ปัจจุบัน (ซ้ายไปขวา)
-        // แต่ตารางเราอยากโชว์ล่าสุดก่อน ก็ใช้ array เดิมได้
         setWaterData(response.data);
+        setError(''); // เคลียร์ error ถ้าโหลดสำเร็จ
       } catch (error) {
         if (error.response?.status === 403) {
            localStorage.removeItem('token');
            navigate('/login');
         } else {
-           setError('ไม่สามารถดึงข้อมูลได้');
+           setError('ไม่สามารถดึงข้อมูลคุณภาพน้ำได้ กรุณาลองใหม่อีกครั้ง');
         }
       }
     };
@@ -56,8 +55,6 @@ const WaterQuality = () => {
     const intervalId = setInterval(fetchWaterQuality, 10000); // Update ทุก 10 วิ
     return () => clearInterval(intervalId);
   }, [navigate, deviceId]);
-
-  const handleLogout = async () => { /* ...Logout Logic เดิม... */ };
 
   // Helper: ตรวจสอบค่าว่าปกติไหม
   const isNormal = (type, value) => {
@@ -105,6 +102,24 @@ const WaterQuality = () => {
             </div>
         </div>
       </header>
+
+      {/* ✅ ส่วนแสดง Error (แก้ปัญหา 'error' & 'AlertCircle' defined but never used) */}
+      {error && (
+        <div style={{
+          background: '#ffebee', 
+          color: '#c62828', 
+          padding: '15px', 
+          borderRadius: '12px', 
+          marginBottom: '20px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '10px',
+          fontWeight: '500'
+        }}>
+          <AlertCircle size={24} />
+          {error}
+        </div>
+      )}
 
       {/* 2. Latest Status Cards */}
       <section className="latest-stats-grid">
@@ -158,10 +173,10 @@ const WaterQuality = () => {
                             <YAxis />
                             <Tooltip />
                             <Legend />
-                            {selectedParam === 'dissolved_oxygen' && <Line type="monotone" dataKey="do" stroke="#0088FE" strokeWidth={3} name="Oxygen" />}
-                            {selectedParam === 'ph' && <Line type="monotone" dataKey="ph" stroke="#8884d8" strokeWidth={3} name="pH" />}
-                            {selectedParam === 'temperature' && <Line type="monotone" dataKey="temp" stroke="#FF8042" strokeWidth={3} name="Temp" />}
-                            {selectedParam === 'salinity' && <Line type="monotone" dataKey="salinity" stroke="#00C49F" strokeWidth={3} name="Salinity" />}
+                            {selectedParam === 'dissolved_oxygen' && <Line type="monotone" dataKey="do" stroke="#0088FE" strokeWidth={3} name="Oxygen" dot={false} />}
+                            {selectedParam === 'ph' && <Line type="monotone" dataKey="ph" stroke="#8884d8" strokeWidth={3} name="pH" dot={false} />}
+                            {selectedParam === 'temperature' && <Line type="monotone" dataKey="temp" stroke="#FF8042" strokeWidth={3} name="Temp" dot={false} />}
+                            {selectedParam === 'salinity' && <Line type="monotone" dataKey="salinity" stroke="#00C49F" strokeWidth={3} name="Salinity" dot={false} />}
                         </LineChart>
                     </ResponsiveContainer>
                 </div>
