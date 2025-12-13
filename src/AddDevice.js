@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Home, Save, HardDrive, AlertCircle, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft, Save, Cpu, MapPin, 
+  AlertCircle, CheckCircle, Terminal 
+} from 'lucide-react';
 import axios from 'axios';
 import config from './config';
 import './AddDevice.css';
@@ -17,9 +20,9 @@ function AddDevice() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // ตรวจสอบ Token
   useEffect(() => {
     const token = localStorage.getItem('token');
-    console.log('🔑 Token check:', token ? 'Found' : 'Not found');
     if (!token) {
       alert('กรุณาเข้าสู่ระบบก่อนใช้งาน');
       navigate('/login');
@@ -37,13 +40,10 @@ function AddDevice() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('🚀 Form submitted');
     
     // Validation
     if (!formData.deviceName.trim() || !formData.deviceId.trim()) {
-      const msg = 'กรุณากรอกชื่อและรหัสอุปกรณ์';
-      setError(msg);
-      console.error('❌ Validation failed:', msg);
+      setError('กรุณากรอกชื่อและรหัสอุปกรณ์ให้ครบถ้วน');
       return;
     }
 
@@ -52,27 +52,14 @@ function AddDevice() {
     setSuccess('');
 
     const token = localStorage.getItem('token');
-    
     if (!token) {
-      alert('Session หมดอายุ กรุณาล็อกอินใหม่');
       navigate('/login');
       return;
     }
 
-    const apiUrl = `${config.API_BASE_URL}/member/devices/add`;
-    
-    console.log('📤 API Request:');
-    console.log('   URL:', apiUrl);
-    console.log('   Data:', {
-      deviceName: formData.deviceName.trim(),
-      deviceId: formData.deviceId.trim(),
-      location: formData.location.trim()
-    });
-    console.log('   Token (first 30 chars):', token.substring(0, 30) + '...');
-
     try {
       const response = await axios.post(
-        apiUrl, 
+        `${config.API_BASE_URL}/member/devices/add`, 
         {
           deviceName: formData.deviceName.trim(),
           deviceId: formData.deviceId.trim(),
@@ -87,212 +74,141 @@ function AddDevice() {
         }
       );
 
-      console.log('✅ Response received:');
-      console.log('   Status:', response.status);
-      console.log('   Data:', response.data);
-
       if (response.status === 201 || response.status === 200) {
-        const successMsg = response.data.msg || response.data.message || 'เพิ่มอุปกรณ์สำเร็จ!';
-        setSuccess(successMsg);
-        console.log('✅ Success:', successMsg);
+        setSuccess('บันทึกอุปกรณ์ใหม่สำเร็จ!');
+        setFormData({ deviceName: '', deviceId: '', location: '' });
         
-        // ล้างฟอร์ม
-        setFormData({
-          deviceName: '',
-          deviceId: '',
-          location: ''
-        });
-        
-        // แสดง success message 2 วินาที แล้วกลับหน้าหลัก
+        // รอ 1.5 วินาทีแล้วกลับหน้าหลัก
         setTimeout(() => {
           navigate('/');
-        }, 2000);
+        }, 1500);
       }
       
     } catch (error) {
-      console.error('❌ Error occurred:');
-      console.error('   Full error:', error);
-      
-      let errorMsg = "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ";
+      console.error('Error:', error);
+      let errorMsg = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
       
       if (error.response) {
-        // Server ตอบกลับมาแต่เป็น error
-        console.error('   Response status:', error.response.status);
-        console.error('   Response data:', error.response.data);
-        console.error('   Response headers:', error.response.headers);
-        
-        errorMsg = error.response.data?.error || 
-                   error.response.data?.msg || 
-                   error.response.data?.message ||
-                   `Server Error (${error.response.status})`;
-        
-        if (error.response.status === 401 || error.response.status === 403) {
-          errorMsg = 'Token หมดอายุหรือไม่ถูกต้อง - กรุณาล็อกอินใหม่';
+        errorMsg = error.response.data?.error || error.response.data?.msg || `Server Error (${error.response.status})`;
+        if (error.response.status === 401) {
+          errorMsg = 'Session หมดอายุ กรุณาเข้าสู่ระบบใหม่';
           setTimeout(() => navigate('/login'), 2000);
-        } else if (error.response.status === 400) {
-          // Bad request - แสดง error ที่ได้จาก server
-          errorMsg = error.response.data?.error || error.response.data?.msg || 'ข้อมูลไม่ถูกต้อง';
-        } else if (error.response.status === 404) {
-          errorMsg = 'ไม่พบ API Endpoint - ตรวจสอบ URL';
-        } else if (error.response.status === 500) {
-          errorMsg = 'เซิร์ฟเวอร์เกิดข้อผิดพลาด - ' + (error.response.data?.details || 'กรุณาลองใหม่อีกครั้ง');
         }
-        
-      } else if (error.request) {
-        // ส่ง request ไปแล้วแต่ไม่ได้รับ response
-        console.error('   Request sent but no response');
-        console.error('   Request:', error.request);
-        errorMsg = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ - ตรวจสอบว่า Backend กำลังรันอยู่";
-      } else {
-        // Error อื่นๆ ในการสร้าง request
-        console.error('   Error message:', error.message);
-        errorMsg = `Error: ${error.message}`;
       }
-      
       setError(errorMsg);
-      console.error('   Final error message:', errorMsg);
-      
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <motion.div 
-      className="add-device-container"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3 }}
-    >
-      <button onClick={() => navigate('/')} className="back-home-btn">
-        <Home size={16} /> กลับหน้าหลัก
-      </button>
+    <div className="add-device-page">
+      <motion.div 
+        className="add-device-container"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        {/* Header */}
+        <header className="form-header-nav">
+          <button onClick={() => navigate('/')} className="back-btn">
+            <ArrowLeft size={20} /> ย้อนกลับ
+          </button>
+          <h2>ลงทะเบียนอุปกรณ์</h2>
+        </header>
 
-      <div className="form-card">
-        <div className="form-header">
-          <div className="icon-bg">
-            <HardDrive size={32} color="#007bff" />
-          </div>
-          <h1>ลงทะเบียนอุปกรณ์</h1>
-          <p>เพิ่มอุปกรณ์ใหม่ลงในระบบฐานข้อมูล</p>
-        </div>
-
-        {/* Success Message */}
-        {success && (
-          <div style={{
-            padding: '15px',
-            marginBottom: '15px',
-            backgroundColor: '#d4edda',
-            border: '1px solid #c3e6cb',
-            borderRadius: '4px',
-            color: '#155724',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px'
-          }}>
-            <CheckCircle size={20} />
-            <strong>{success}</strong>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div style={{
-            padding: '15px',
-            marginBottom: '15px',
-            backgroundColor: '#f8d7da',
-            border: '1px solid #f5c6cb',
-            borderRadius: '4px',
-            color: '#721c24',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px'
-          }}>
-            <AlertCircle size={20} />
-            <div>
-              <strong>เกิดข้อผิดพลาด</strong>
-              <div style={{ fontSize: '14px', marginTop: '5px' }}>{error}</div>
+        <div className="form-card">
+          <div className="card-icon-header">
+            <div className="icon-circle">
+              <Cpu size={32} color="white" />
             </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>ชื่ออุปกรณ์ (Device Name) *</label>
-            <input 
-              type="text" 
-              name="deviceName" 
-              placeholder="เช่น บ่อกุ้งโซน A" 
-              value={formData.deviceName}
-              onChange={handleChange}
-              disabled={loading}
-              required 
-            />
+            <p className="form-subtitle">กรอกข้อมูลเพื่อเชื่อมต่ออุปกรณ์ IoT เข้าสู่ระบบ</p>
           </div>
 
-          <div className="form-group">
-            <label>รหัสอุปกรณ์ (Device ID) *</label>
-            <div className="input-with-hint">
+          {/* Feedback Messages */}
+          <AnimatePresence>
+            {success && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                className="alert-box success"
+              >
+                <CheckCircle size={20} /> {success}
+              </motion.div>
+            )}
+
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                className="alert-box error"
+              >
+                <AlertCircle size={20} /> {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <form onSubmit={handleSubmit} className="device-form">
+            <div className="form-group">
+              <label>ชื่ออุปกรณ์ (Device Name) <span className="required">*</span></label>
+              <input 
+                type="text" 
+                name="deviceName" 
+                className="form-input"
+                placeholder="เช่น บ่อกุ้ง A, เครื่องวัดหน้าฟาร์ม" 
+                value={formData.deviceName}
+                onChange={handleChange}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>รหัสอุปกรณ์ (Device ID) <span className="required">*</span></label>
               <input 
                 type="text" 
                 name="deviceId" 
+                className="form-input monospace-font"
                 placeholder="เช่น ESP32_001" 
                 value={formData.deviceId}
                 onChange={handleChange}
                 disabled={loading}
-                required 
               />
-              <small className="hint">* ห้ามซ้ำกับที่มีอยู่ในระบบ</small>
+              <small className="input-hint">ต้องตรงกับ ID ที่ระบุใน Code ของบอร์ด ESP32</small>
+            </div>
+
+            <div className="form-group">
+              <label>สถานที่ติดตั้ง (Location)</label>
+              <div className="input-with-icon">
+                <MapPin size={18} className="field-icon"/>
+                <input 
+                  type="text" 
+                  name="location" 
+                  className="form-input pl-10"
+                  placeholder="เช่น โซนเหนือ, บ่ออนุบาล" 
+                  value={formData.location}
+                  onChange={handleChange}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="submit-btn" disabled={loading}>
+              {loading ? <span className="loader"></span> : <><Save size={20} /> บันทึกข้อมูล</>}
+            </button>
+          </form>
+
+          {/* Debug Section (ย่อส่วนลงมาให้ดูสะอาดตา) */}
+          <div className="debug-section">
+            <div className="debug-header">
+              <Terminal size={14} /> <span>Developer Info</span>
+            </div>
+            <div className="debug-content">
+              Status: {localStorage.getItem('token') ? '🟢 Authenticated' : '🔴 No Token'} <br/>
+              API: {config.API_BASE_URL}
             </div>
           </div>
 
-          <div className="form-group">
-            <label>สถานที่ติดตั้ง</label>
-            <input 
-              type="text" 
-              name="location" 
-              placeholder="ระบุพิกัด หรือ ชื่อฟาร์ม" 
-              value={formData.location}
-              onChange={handleChange}
-              disabled={loading}
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            className="submit-btn" 
-            disabled={loading}
-            style={{
-              opacity: loading ? 0.6 : 1,
-              cursor: loading ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {loading ? (
-              <>⏳ กำลังบันทึก...</>
-            ) : (
-              <>
-                <Save size={18} /> บันทึกข้อมูล
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Debug Info */}
-        <div style={{
-          marginTop: '20px',
-          padding: '10px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '4px',
-          fontSize: '12px',
-          color: '#6c757d'
-        }}>
-          <strong>🔧 Debug Info:</strong><br/>
-          API URL: {config.API_BASE_URL}/member/devices/add<br/>
-          Token: {localStorage.getItem('token') ? '✅ พบ' : '❌ ไม่พบ'}
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
 
