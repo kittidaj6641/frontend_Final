@@ -10,7 +10,6 @@ import {
 
 import config from './config';
 import { checkQuality } from './waterStandard';
-// เปลี่ยนจาก PieChart เป็น BarChart
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import './Home.css';
 
@@ -106,7 +105,6 @@ const Home = () => {
   const qTemp = checkQuality('temp', latest.temperature);
   const qTurb = checkQuality('turbidity', latest.turbidity);
 
-  // เปลี่ยนรูปแบบข้อมูลสำหรับ BarChart
   const chartData = latest.device_id ? [
     { name: 'pH', value: Number(latest.ph) || 0, color: '#0ea5e9' },
     { name: 'DO (mg/L)', value: Number(latest.dissolved_oxygen) || 0, color: '#10b981' },
@@ -151,7 +149,7 @@ const Home = () => {
         </section>
 
         {error && (
-          <motion.div initial={{opacity:0, scale:0.95}} animate={{opacity:1, scale:1}} style={{padding:'15px 20px', background:'#fef2f2', color:'#ef4444', borderRadius:'12px', marginBottom:'25px', display:'flex', gap:'12px', alignItems:'center', border:'1px solid #fecaca'}}>
+          <motion.div initial={{opacity:0, scale:0.95}} animate={{opacity:1, scale:1}} className="error-alert">
             <AlertTriangle size={20}/> {error}
           </motion.div>
         )}
@@ -246,3 +244,49 @@ const Home = () => {
                   ไม่มีข้อมูลสำหรับแสดงผล
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Action Menu */}
+          <div className="card-box">
+            <div className="section-title">เมนูจัดการ</div>
+            <div className="menu-grid">
+              <button className="menu-btn btn-primary" onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}>
+                <Activity size={20}/> ดูกราฟ Real-time
+              </button>
+              <button className="menu-btn btn-outline" onClick={() => navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality')}>
+                <Search size={20}/> ประวัติย้อนหลัง
+              </button>
+              <button className="menu-btn btn-success" onClick={() => navigate('/add-device')}>
+                <PlusCircle size={20}/> ลงทะเบียนเซนเซอร์เพิ่ม
+              </button>
+              <button className="menu-btn btn-outline" onClick={() => navigate('/shrimp-info')}>
+                <Info size={20}/> คู่มือการดูแลน้ำ
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Modal */}
+      {modal.isOpen && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <motion.div 
+            initial={{scale:0.9, opacity:0}} 
+            animate={{scale:1, opacity:1}} 
+            className="modal-content" 
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 style={{marginTop:0, color:'var(--text-main)'}}>{modal.title}</h3>
+            <p style={{color:'var(--text-muted)', lineHeight:'1.6'}}>{modal.content}</p>
+            <button className="modal-btn" onClick={closeModal}>
+              เข้าใจแล้ว
+            </button>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Home;
