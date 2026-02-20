@@ -109,6 +109,7 @@ const Home = () => {
     { name: 'pH', value: Number(latest.ph) || 0, color: '#0ea5e9' },
     { name: 'DO (mg/L)', value: Number(latest.dissolved_oxygen) || 0, color: '#10b981' },
     { name: 'Temp (°C)', value: Number(latest.temperature) || 0, color: '#f59e0b' },
+    { name: 'Turbidity (NTU)', value: Number(latest.turbidity) || 0, color: '#8b5cf6' },
   ] : [];
 
   return (
