@@ -5,23 +5,16 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Info, LogOut, Search, AlertTriangle, Clock, Activity,
-  PlusCircle, ChevronDown, Droplets, Thermometer, Wind, Zap, Fish, BarChart2
+  PlusCircle, ChevronDown, Fish, BarChart2
 } from 'lucide-react';
 
 import config from './config';
-import { checkQuality } from './waterStandard';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import './Home.css';
 
 const Home = () => {
 
   const navigate = useNavigate();
-
-  const [modal, setModal] = useState({
-    isOpen: false,
-    title: '',
-    content: ''
-  });
 
   const [waterData, setWaterData] = useState([]);
   const [error, setError] = useState('');
@@ -162,41 +155,13 @@ const Home = () => {
   };
 
 
-  const openModal = (title, content) => {
-
-    setModal({
-      isOpen: true,
-      title,
-      content
-    });
-
-  };
-
-  const closeModal = () => {
-
-    setModal({
-      isOpen: false,
-      title: '',
-      content: ''
-    });
-
-  };
-
-
-  // ประมวลผลข้อมูล
   const latest = waterData.length > 0 ? waterData[0] : {};
-
-  const qPH = checkQuality('ph', latest.ph);
-  const qDO = checkQuality('do', latest.dissolved_oxygen);
-  const qTemp = checkQuality('temp', latest.temperature);
-  const qTurb = checkQuality('turbidity', latest.turbidity);
-
 
   const chartData = latest.device_id
     ? [
         { name: 'pH', value: Number(latest.ph) || 0, color: '#0ea5e9' },
-        { name: 'DO (mg/L)', value: Number(latest.dissolved_oxygen) || 0, color: '#10b981' },
-        { name: 'Temp (°C)', value: Number(latest.temperature) || 0, color: '#f59e0b' }
+        { name: 'DO', value: Number(latest.dissolved_oxygen) || 0, color: '#10b981' },
+        { name: 'Temp', value: Number(latest.temperature) || 0, color: '#f59e0b' }
       ]
     : [];
 
@@ -212,10 +177,6 @@ const Home = () => {
         </div>
 
         <nav className="nav">
-
-          <button className="nav-btn" onClick={() => openModal('เกี่ยวกับ', 'ระบบจัดการคุณภาพน้ำอัจฉริยะ V1.0')}>
-            <Info size={20}/>
-          </button>
 
           <button className="nav-btn" onClick={() => navigate('/login-logs')}>
             <Clock size={20}/>
