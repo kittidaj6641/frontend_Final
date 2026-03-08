@@ -33,23 +33,28 @@ function Realtime() {
 
       try {
 
-        // 🔹 ดึง token จาก localStorage
         const token = localStorage.getItem("token");
+
+        if (!token) {
+          setError("กรุณาเข้าสู่ระบบใหม่");
+          setLoading(false);
+          return;
+        }
 
         const response = await fetch(
           `https://backend-production-6b0f.up.railway.app/member/water-quality?deviceId=${deviceId}`,
           {
             headers: {
-              "Authorization": `Bearer ${token}`
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
             }
           }
         );
 
         const data = await response.json();
 
-        // ถ้า API ตอบ error
         if (!response.ok) {
-          setError(data.msg || "ไม่สามารถดึงข้อมูลได้");
+          setError(data.msg || "ไม่สามารถดึงข้อมูลจาก API");
           setLoading(false);
           return;
         }
@@ -66,8 +71,8 @@ function Realtime() {
 
       } catch (err) {
 
-        console.error(err);
-        setError('ไม่สามารถดึงข้อมูลจาก Server ได้');
+        console.error("Realtime error:", err);
+        setError("ไม่สามารถเชื่อมต่อ Server ได้");
         setLoading(false);
 
       }
@@ -76,8 +81,9 @@ function Realtime() {
 
     fetchRealtimeData();
 
-    // รีเฟรชทุก 5 วินาที
-    const interval = setInterval(fetchRealtimeData, 5000);
+    const interval = setInterval(() => {
+      fetchRealtimeData();
+    }, 5000);
 
     return () => clearInterval(interval);
 
@@ -88,7 +94,6 @@ function Realtime() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
       className="realtime-container"
     >
@@ -97,7 +102,9 @@ function Realtime() {
         <Home size={16} /> กลับหน้าหลัก
       </button>
 
-      <h1><Activity className="icon-pulse" /> ข้อมูลคุณภาพน้ำ (Realtime)</h1>
+      <h1>
+        <Activity className="icon-pulse"/> ข้อมูลคุณภาพน้ำ (Realtime)
+      </h1>
 
       <h3 style={{ textAlign: 'center', color: '#666' }}>
         อุปกรณ์: {deviceId || 'ไม่ระบุ'}
