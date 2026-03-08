@@ -33,11 +33,26 @@ function Realtime() {
 
       try {
 
+        // 🔹 ดึง token จาก localStorage
+        const token = localStorage.getItem("token");
+
         const response = await fetch(
-          `https://backend-production-6b0f.up.railway.app/member/water-quality?deviceId=${deviceId}`
+          `https://backend-production-6b0f.up.railway.app/member/water-quality?deviceId=${deviceId}`,
+          {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          }
         );
 
         const data = await response.json();
+
+        // ถ้า API ตอบ error
+        if (!response.ok) {
+          setError(data.msg || "ไม่สามารถดึงข้อมูลได้");
+          setLoading(false);
+          return;
+        }
 
         setSensorData({
           temp: data.temperature ?? 0,
@@ -61,6 +76,7 @@ function Realtime() {
 
     fetchRealtimeData();
 
+    // รีเฟรชทุก 5 วินาที
     const interval = setInterval(fetchRealtimeData, 5000);
 
     return () => clearInterval(interval);
@@ -82,6 +98,7 @@ function Realtime() {
       </button>
 
       <h1><Activity className="icon-pulse" /> ข้อมูลคุณภาพน้ำ (Realtime)</h1>
+
       <h3 style={{ textAlign: 'center', color: '#666' }}>
         อุปกรณ์: {deviceId || 'ไม่ระบุ'}
       </h3>
