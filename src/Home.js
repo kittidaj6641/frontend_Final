@@ -5,8 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut, Clock, Activity, PlusCircle,
-  ChevronDown, Droplets, Thermometer, Wind, Zap,
-  Fish, BarChart2, BookOpen, AlertTriangle, Info
+  ChevronDown, Fish, BarChart2, BookOpen, AlertTriangle, Info
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -14,7 +13,6 @@ import {
 } from 'recharts';
 
 import config from './config';
-import { checkQuality } from './waterStandard';
 import WaterGauge from './WaterGauge';
 import './Home.css';
 
@@ -35,26 +33,6 @@ const CustomTooltip = ({ active, payload, label }) => {
   }
   return null;
 };
-
-/* ─── Stat Card Component ────────────── */
-const StatCard = ({ label, value, unit, quality, icon: Icon }) => (
-  <motion.div
-    className={`stat-card ${quality.status || ''}`}
-    initial={{ opacity: 0, y: 16 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.35 }}
-  >
-    <div className="card-label">
-      <Icon size={14} />
-      {label}
-    </div>
-    <div className="card-value-row">
-      <span className="card-value">{value !== undefined && value !== null && value !== '' ? value : '—'}</span>
-      {unit && <span className="card-unit">{unit}</span>}
-    </div>
-    <span className="card-status">{quality.msg || 'รอข้อมูล'}</span>
-  </motion.div>
-);
 
 /* ─── Main Component ─────────────────── */
 const Home = () => {
@@ -129,12 +107,8 @@ const Home = () => {
   };
 
   /* Data processing */
-  const latest   = waterData[0] || {};
-  const qPH      = checkQuality('ph',          latest.ph);
-  const qDO      = checkQuality('do',           latest.dissolved_oxygen);
-  const qTemp    = checkQuality('temp',         latest.temperature);
-  const qTurb    = checkQuality('turbidity',    latest.turbidity);
-  const hasData  = Boolean(latest.device_id);
+  const latest  = waterData[0] || {};
+  const hasData = Boolean(latest.device_id);
 
   const chartData = hasData ? [
     { name: 'pH',       value: Number(latest.ph)                 || 0, color: '#0d9488' },
@@ -211,21 +185,12 @@ const Home = () => {
           )}
         </AnimatePresence>
 
-        {/* ── Sensor Cards ── */}
-        <div className="section-label">ค่าล่าสุด</div>
-        <div className="stats-grid">
-          <StatCard label="pH"        value={latest.ph}                unit=""      quality={qPH}   icon={Droplets}    />
-          <StatCard label="DO"        value={latest.dissolved_oxygen}  unit="mg/L"  quality={qDO}   icon={Wind}        />
-          <StatCard label="อุณหภูมิ"  value={latest.temperature}       unit="°C"    quality={qTemp} icon={Thermometer} />
-          <StatCard label="ความขุ่น"  value={latest.turbidity}         unit="NTU"   quality={qTurb} icon={Zap}         />
-        </div>
-
-        {/* ── Gauges ── */}
-        <div className="section-label">หน้าปัดระดับค่าน้ำ</div>
+        {/* ── Sensor Gauges (merged) ── */}
+        <div className="section-label">คุณภาพน้ำล่าสุด</div>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12 }}
+          transition={{ delay: 0.10 }}
         >
           <WaterGauge
             ph={latest.ph}
