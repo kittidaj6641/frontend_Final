@@ -15,6 +15,7 @@ import {
 
 import config from './config';
 import { checkQuality } from './waterStandard';
+import WaterGauge from './WaterGauge';
 import './Home.css';
 
 /* ─── Custom Tooltip for Chart ───────── */
@@ -218,6 +219,21 @@ const Home = () => {
           <StatCard label="อุณหภูมิ"  value={latest.temperature}       unit="°C"    quality={qTemp} icon={Thermometer} />
           <StatCard label="ความขุ่น"  value={latest.turbidity}         unit="NTU"   quality={qTurb} icon={Zap}         />
         </div>
+
+        {/* ── Gauges ── */}
+        <div className="section-label">หน้าปัดระดับค่าน้ำ</div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+        >
+          <WaterGauge
+            ph={latest.ph}
+            dissolvedOxygen={latest.dissolved_oxygen}
+            temperature={latest.temperature}
+            turbidity={latest.turbidity}
+          />
+        </motion.div>
 
         {/* ── Chart ── */}
         <div className="section-label">สรุปค่าปัจจัยน้ำ</div>
