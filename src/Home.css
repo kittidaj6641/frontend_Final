@@ -451,13 +451,24 @@ body {
 /* Full-width buttons */
 .menu-btn.full-width {
   grid-column: 1 / -1;
-  flex-direction: row;
+  flex-direction: row !important;
   align-items: center;
   gap: 12px;
-  padding: 15px 18px;
+  padding: 14px 18px;
+  min-height: 0;
 }
 
-.menu-btn.full-width .btn-icon { flex-shrink: 0; }
+.menu-btn.full-width .btn-icon {
+  flex-shrink: 0;
+  width: 34px; height: 34px;
+}
+
+.menu-btn.full-width span,
+.menu-btn.full-width {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* Variants */
 .btn-primary {
