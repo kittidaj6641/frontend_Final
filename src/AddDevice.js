@@ -195,16 +195,7 @@ function AddDevice() {
             </button>
           </form>
 
-          {/* Debug Section (ย่อส่วนลงมาให้ดูสะอาดตา) */}
-          <div className="debug-section">
-            <div className="debug-header">
-              <Terminal size={14} /> <span>Developer Info</span>
-            </div>
-            <div className="debug-content">
-              Status: {localStorage.getItem('token') ? '🟢 Authenticated' : '🔴 No Token'} <br/>
-              API: {config.API_BASE_URL}
-            </div>
-          </div>
+          
 
         </div>
       </motion.div>
