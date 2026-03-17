@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Save, Cpu, MapPin, 
-  AlertCircle, CheckCircle, Terminal 
+  AlertCircle, CheckCircle 
 } from 'lucide-react';
 import axios from 'axios';
 import config from './config';
@@ -20,7 +20,7 @@ function AddDevice() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // ตรวจสอบ Token
+  // ตรวจสอบการเข้าสู่ระบบ
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -41,7 +41,7 @@ function AddDevice() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
+    // ตรวจสอบข้อมูลก่อนส่ง
     if (!formData.deviceName.trim() || !formData.deviceId.trim()) {
       setError('กรุณากรอกชื่อและรหัสอุปกรณ์ให้ครบถ้วน');
       return;
@@ -78,7 +78,7 @@ function AddDevice() {
         setSuccess('บันทึกอุปกรณ์ใหม่สำเร็จ!');
         setFormData({ deviceName: '', deviceId: '', location: '' });
         
-        // รอ 1.5 วินาทีแล้วกลับหน้าหลัก
+        // รอ 1.5 วินาทีแล้วนำทางกลับหน้าหลัก
         setTimeout(() => {
           navigate('/');
         }, 1500);
@@ -109,7 +109,7 @@ function AddDevice() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        {/* Header */}
+        {/* ส่วนหัวของฟอร์ม */}
         <header className="form-header-nav">
           <button onClick={() => navigate('/')} className="back-btn">
             <ArrowLeft size={20} /> ย้อนกลับ
@@ -125,11 +125,13 @@ function AddDevice() {
             <p className="form-subtitle">กรอกข้อมูลเพื่อเชื่อมต่ออุปกรณ์ IoT เข้าสู่ระบบ</p>
           </div>
 
-          {/* Feedback Messages */}
+          {/* ส่วนแสดงข้อความแจ้งเตือน (สำเร็จ / ผิดพลาด) */}
           <AnimatePresence>
             {success && (
               <motion.div 
-                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                initial={{ opacity: 0, height: 0 }} 
+                animate={{ opacity: 1, height: 'auto' }} 
+                exit={{ opacity: 0, height: 0 }}
                 className="alert-box success"
               >
                 <CheckCircle size={20} /> {success}
@@ -138,7 +140,9 @@ function AddDevice() {
 
             {error && (
               <motion.div 
-                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                initial={{ opacity: 0, height: 0 }} 
+                animate={{ opacity: 1, height: 'auto' }} 
+                exit={{ opacity: 0, height: 0 }}
                 className="alert-box error"
               >
                 <AlertCircle size={20} /> {error}
@@ -146,9 +150,12 @@ function AddDevice() {
             )}
           </AnimatePresence>
 
+          {/* ฟอร์มกรอกข้อมูล */}
           <form onSubmit={handleSubmit} className="device-form">
             <div className="form-group">
-              <label>ชื่ออุปกรณ์ (Device Name) <span className="required">*</span></label>
+              <label>
+                ชื่ออุปกรณ์ (Device Name) <span className="required">*</span>
+              </label>
               <input 
                 type="text" 
                 name="deviceName" 
@@ -161,7 +168,9 @@ function AddDevice() {
             </div>
 
             <div className="form-group">
-              <label>รหัสอุปกรณ์ (Device ID) <span className="required">*</span></label>
+              <label>
+                รหัสอุปกรณ์ (Device ID) <span className="required">*</span>
+              </label>
               <input 
                 type="text" 
                 name="deviceId" 
@@ -171,13 +180,15 @@ function AddDevice() {
                 onChange={handleChange}
                 disabled={loading}
               />
-              <small className="input-hint">ต้องตรงกับ ID ที่ระบุใน Code ของบอร์ด ESP32</small>
+              <small className="input-hint">
+                ต้องตรงกับ ID ที่ระบุใน Code ของบอร์ด ESP32
+              </small>
             </div>
 
             <div className="form-group">
               <label>สถานที่ติดตั้ง (Location)</label>
               <div className="input-with-icon">
-                <MapPin size={18} className="field-icon"/>
+                <MapPin size={18} className="field-icon" />
                 <input 
                   type="text" 
                   name="location" 
@@ -191,21 +202,15 @@ function AddDevice() {
             </div>
 
             <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? <span className="loader"></span> : <><Save size={20} /> บันทึกข้อมูล</>}
+              {loading ? (
+                <span className="loader"></span>
+              ) : (
+                <>
+                  <Save size={20} /> บันทึกข้อมูล
+                </>
+              )}
             </button>
           </form>
-
-          {/* Debug Section (ย่อส่วนลงมาให้ดูสะอาดตา) */}
-          <div className="debug-section">
-            <div className="debug-header">
-              <Terminal size={14} /> <span>Developer Info</span>
-            </div>
-            <div className="debug-content">
-              Status: {localStorage.getItem('token') ? '🟢 Authenticated' : '🔴 No Token'} <br/>
-              API: {config.API_BASE_URL}
-            </div>
-          </div>
-
         </div>
       </motion.div>
     </div>
