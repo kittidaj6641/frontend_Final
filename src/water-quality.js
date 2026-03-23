@@ -11,7 +11,7 @@ import {
   ArrowLeft, Droplets, Wind, Thermometer, Zap,
   ChevronDown, ChevronLeft, ChevronRight, AlertTriangle,
   CheckCircle, BarChart2, List, CalendarDays, Clock
-} from 'lucide-react';
+} from 'lucide-react'; // ลบ Layers ออกแล้วเพื่อแก้ Error
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const THAI_MONTHS = [
@@ -140,12 +140,18 @@ const CompactDateSelector = ({ mode, date, onChange }) => {
         <ChevronLeft size={20}/>
       </button>
       
-      <div style={{ position:'relative', display:'flex', alignItems:'center', gap:'8px', fontWeight:'700', color:'#1e293b', fontSize:'15px' }}>
+      {/* แก้ไขให้คลิกง่ายขึ้นโดยใช้ label และ onCLick เรียก showPicker() */}
+      <label style={{ position:'relative', display:'flex', alignItems:'center', gap:'8px', fontWeight:'700', color:'#1e293b', fontSize:'15px', cursor:'pointer', margin: 0 }}>
         <CalendarDays size={18} color="#0d9488"/>
         {label}
         <input 
           type={inputType} 
           value={val}
+          onClick={(e) => {
+            try {
+              if (e.target.showPicker) e.target.showPicker();
+            } catch (err) {}
+          }}
           onChange={(e) => {
             if(e.target.value) {
               onChange(mode === 'month' ? e.target.value + '-01' : e.target.value);
@@ -153,7 +159,7 @@ const CompactDateSelector = ({ mode, date, onChange }) => {
           }}
           style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', opacity:0, cursor:'pointer' }}
         />
-      </div>
+      </label>
 
       <button onClick={()=>shiftDate(1)} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding:'4px' }}>
         <ChevronRight size={20}/>
