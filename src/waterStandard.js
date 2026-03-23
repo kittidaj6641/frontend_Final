@@ -4,36 +4,40 @@ export const checkQuality = (type, value) => {
     if (isNaN(val)) return { status: 'unknown', color: '#ccc', msg: 'ไม่มีข้อมูล' };
 
     // --- 1. Dissolved Oxygen (DO) ---
-    // < 3.0 = วิกฤต (แดง)
-    // 3.0 - 4.0 = เตือน (ส้ม)
-    // > 4.0 = ปกติ (เขียว)
+    // 0 - 2 = แก้ไข (แดง)
+    // 2 - 3 = เฝ้าระวัง (ส้ม)
+    // 3 - 8 = ปกติ (เขียว)
     if (type === 'do' || type === 'dissolved_oxygen') {
-        if (val < 3.0) return { status: 'critical', color: '#dc3545', msg: 'วิกฤต (ต่ำมาก)' }; // แดง
-        if (val < 4.0) return { status: 'warning', color: '#fd7e14', msg: 'ต่ำกว่าเกณฑ์' };   // ส้ม
-        return { status: 'normal', color: '#28a745', msg: 'ปกติ' };                           // เขียว
+        if (val <= 2.0) return { status: 'critical', color: '#dc3545', msg: 'แก้ไข' }; 
+        if (val < 3.0)  return { status: 'warning', color: '#fd7e14', msg: 'เฝ้าระวัง' };
+        if (val >= 3.0 && val <= 8.0) return { status: 'normal', color: '#28a745', msg: 'ปกติ' };
+        // กรณีเกิน 8 (ถ้ามี) ให้ถือว่าต้องเฝ้าระวังหรือแก้ไขตามความเหมาะสมของบ่อกุ้ง
+        return { status: 'critical', color: '#dc3545', msg: 'แก้ไข (สูงเกิน)' }; 
     }
 
     // --- 2. pH ---
-    // < 6.5 หรือ > 9.0 = วิกฤต
-    // 6.5-7.5 หรือ 8.5-9.0 = เตือน
-    // 7.5 - 8.5 = ปกติ
+    // 0 - 5 = แก้ไข (แดง)
+    // 5 - 6.5 = เฝ้าระวัง (ส้ม)
+    // 6.5 - 8.5 = ปกติ (เขียว)
     if (type === 'ph') {
-        if (val < 6.5 || val > 9.0) return { status: 'critical', color: '#dc3545', msg: 'วิกฤต (pH)' };
-        if ((val >= 6.5 && val < 7.5) || (val > 8.5 && val <= 9.0)) return { status: 'warning', color: '#fd7e14', msg: 'เฝ้าระวัง' };
-        return { status: 'normal', color: '#28a745', msg: 'ปกติ' };
+        if (val <= 5.0) return { status: 'critical', color: '#dc3545', msg: 'แก้ไข' };
+        if (val < 6.5)  return { status: 'warning', color: '#fd7e14', msg: 'เฝ้าระวัง' };
+        if (val >= 6.5 && val <= 8.5) return { status: 'normal', color: '#28a745', msg: 'ปกติ' };
+        // กรณี pH สูงเกิน 8.5
+        return { status: 'critical', color: '#dc3545', msg: 'แก้ไข (ด่างสูง)' };
     }
 
-    // --- 3. Temperature ---
+    // --- 3. Temperature (ใช้เกณฑ์เดิมของคุณ) ---
     if (type === 'temp' || type === 'temperature') {
-        if (val < 24 || val > 34) return { status: 'critical', color: '#dc3545', msg: 'วิกฤต (Temp)' };
-        if (val < 26 || val > 32) return { status: 'warning', color: '#fd7e14', msg: 'แกว่ง' };
+        if (val < 24 || val > 34) return { status: 'critical', color: '#dc3545', msg: 'วิกฤต' };
+        if (val < 26 || val > 32) return { status: 'warning', color: '#fd7e14', msg: 'เฝ้าระวัง' };
         return { status: 'normal', color: '#28a745', msg: 'ปกติ' };
     }
 
-    // --- 4. Turbidity ---
+    // --- 4. Turbidity (ใช้เกณฑ์เดิมของคุณ) ---
     if (type === 'turbidity') {
         if (val > 1500) return { status: 'critical', color: '#dc3545', msg: 'ขุ่นมาก' };
-        if (val > 800) return { status: 'warning', color: '#fd7e14', msg: 'เริ่มขุ่น' };
+        if (val > 800)  return { status: 'warning', color: '#fd7e14', msg: 'เฝ้าระวัง' };
         return { status: 'normal', color: '#28a745', msg: 'ปกติ' };
     }
 
