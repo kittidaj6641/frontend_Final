@@ -350,6 +350,7 @@ body {
   gap: 12px;
 }
 
+
 .menu-btn {
   display: flex;
   flex-direction: column;
@@ -367,8 +368,10 @@ body {
   -webkit-tap-highlight-color: transparent;
   position: relative;
   overflow: hidden;
-}
 
+  /* 👇 เพิ่มบรรทัดนี้ลงไปเพื่อบังคับให้ความสูงเท่ากันทุกปุ่ม */
+  height: 100%; 
+}
 .menu-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
