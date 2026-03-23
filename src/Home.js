@@ -293,6 +293,7 @@ const Home = () => {
         </motion.div>
 
         {/* ── Quick Actions ── */}
+{/* ── Quick Actions ── */}
         <div className="section-label">เมนูด่วน</div>
         <motion.div
           className="menu-grid"
@@ -300,7 +301,7 @@ const Home = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.22 }}
         >
-          {/* เอาคลาส full-width ออกทั้งหมด เพื่อให้ทุกปุ่มจัดเรียงแบบ 2x2 เท่ากัน */}
+          {/* เอาคลาส full-width ออกจากทุกปุ่มตรงนี้ครับ */}
           <button
             className="menu-btn btn-primary"
             onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}
