@@ -217,7 +217,7 @@ const WaterQuality = () => {
   const [allData,    setAllData]    = useState([]);
   const [devices,    setDevices]    = useState([]);
   const [error,      setError]      = useState('');
-  const [rangeMode,  setRangeMode]  = useState('day');   // 'all' | 'day'
+  const [rangeMode,  setRangeMode]  = useState('day');   // 'all' | 'day' | 'week' | 'month'
   const [viewMode,   setViewMode]   = useState('chart'); // 'chart' | 'table'
   const [selParam,   setSelParam]   = useState('dissolved_oxygen');
   const [selDate,    setSelDate]    = useState(todayKey());
@@ -261,21 +261,56 @@ const WaterQuality = () => {
   // ── Active dataset depends on mode ──
   const activeData = useMemo(() => {
     if (rangeMode === 'all') return allData;
-    return allData.filter(row => toDateKey(new Date(row.recorded_at)) === selDate);
+    
+    if (rangeMode === 'day') {
+      return allData.filter(row => toDateKey(new Date(row.recorded_at)) === selDate);
+    }
+    
+    if (rangeMode === 'week') {
+      // ดึงข้อมูล 7 วัน (รวมวันที่เลือกเป็นวันสุดท้าย)
+      const endObj = new Date(selDate + 'T00:00:00');
+      const startObj = new Date(selDate + 'T00:00:00');
+      startObj.setDate(startObj.getDate() - 6);
+      
+      const endStr = toDateKey(endObj);
+      const startStr = toDateKey(startObj);
+      
+      return allData.filter(row => {
+        const dStr = toDateKey(new Date(row.recorded_at));
+        return dStr >= startStr && dStr <= endStr;
+      });
+    }
+
+    if (rangeMode === 'month') {
+      // ดึงข้อมูลเฉพาะเดือนและปีที่ตรงกับวันที่เลือก (YYYY-MM)
+      const prefix = selDate.substring(0, 7); 
+      return allData.filter(row => toDateKey(new Date(row.recorded_at)).startsWith(prefix));
+    }
+    
+    return allData;
   }, [allData, rangeMode, selDate]);
 
   const latest = activeData[0] || {};
 
-  const chartData = useMemo(() => [...activeData].reverse().map(row => ({
-    time: rangeMode === 'all'
-      ? new Date(row.recorded_at).toLocaleDateString('th-TH', { day:'numeric', month:'short' }) + ' ' +
-        new Date(row.recorded_at).toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' })
-      : new Date(row.recorded_at).toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' }),
-    dissolved_oxygen: row.dissolved_oxygen,
-    ph:               row.ph,
-    temperature:      row.temperature,
-    turbidity:        row.turbidity,
-  })), [activeData, rangeMode]);
+  const chartData = useMemo(() => [...activeData].reverse().map(row => {
+    const d = new Date(row.recorded_at);
+    let timeStr = '';
+    // แสดงเวลาอย่างเดียวถ้ารายวัน แต่ถ้าดูหลายวันให้แสดงวันที่ด้วย
+    if (rangeMode === 'day') {
+      timeStr = d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+    } else {
+      timeStr = d.toLocaleDateString('th-TH', { day:'numeric', month:'short' }) + ' ' + 
+                d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+    }
+    
+    return {
+      time: timeStr,
+      dissolved_oxygen: row.dissolved_oxygen,
+      ph:               row.ph,
+      temperature:      row.temperature,
+      turbidity:        row.turbidity,
+    };
+  }), [activeData, rangeMode]);
 
   const totalPages = Math.ceil(activeData.length / ITEMS_PER_PAGE);
   const pagedData  = activeData.slice((curPage-1)*ITEMS_PER_PAGE, curPage*ITEMS_PER_PAGE);
@@ -291,10 +326,20 @@ const WaterQuality = () => {
     setCurPage(1);
   }, []);
 
-  // Section header label
-  const sectionLabel = rangeMode === 'all'
-    ? `ค่าล่าสุด — ข้อมูลทั้งหมด (${allData.length} รายการ)`
-    : `ค่าล่าสุด — ${fmtDate(selDate)}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
+  // สร้างคำอธิบายหัวข้ออิงตาม Range
+  let sectionLabel = '';
+  if (rangeMode === 'all') {
+    sectionLabel = `ค่าล่าสุด — ข้อมูลทั้งหมด (${allData.length} รายการ)`;
+  } else if (rangeMode === 'day') {
+    sectionLabel = `ค่าล่าสุด — ${fmtDate(selDate)}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
+  } else if (rangeMode === 'week') {
+    const startObj = new Date(selDate + 'T00:00:00');
+    startObj.setDate(startObj.getDate() - 6);
+    sectionLabel = `ค่าล่าสุด — ${fmtDate(toDateKey(startObj))} ถึง ${fmtDate(selDate)}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
+  } else if (rangeMode === 'month') {
+    const [y, m] = selDate.split('-');
+    sectionLabel = `ค่าล่าสุด — ประจำเดือน ${THAI_MONTHS[parseInt(m)-1]} ${parseInt(y)+543}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
+  }
 
   return (
     <motion.div className="wq-page" initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ duration:0.3 }}>
@@ -333,26 +378,24 @@ const WaterQuality = () => {
 
         {/* ── Range toggle ── */}
         <div className="wq-section-label">โหมดการดูข้อมูล</div>
-        <div className="wq-range-toggle">
-          <button
-            className={`wq-range-btn${rangeMode === 'all' ? ' active' : ''}`}
-            onClick={() => handleRangeChange('all')}
-          >
-            <Layers size={15}/>
-            ข้อมูลทั้งหมด
+        <div className="wq-range-toggle" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <button className={`wq-range-btn${rangeMode === 'day' ? ' active' : ''}`} onClick={() => handleRangeChange('day')}>
+            <CalendarDays size={15}/> รายวัน
           </button>
-          <button
-            className={`wq-range-btn${rangeMode === 'day' ? ' active' : ''}`}
-            onClick={() => handleRangeChange('day')}
-          >
-            <CalendarDays size={15}/>
-            รายวัน
+          <button className={`wq-range-btn${rangeMode === 'week' ? ' active' : ''}`} onClick={() => handleRangeChange('week')}>
+            <CalendarDays size={15}/> 7 วันย้อนหลัง
+          </button>
+          <button className={`wq-range-btn${rangeMode === 'month' ? ' active' : ''}`} onClick={() => handleRangeChange('month')}>
+            <CalendarDays size={15}/> รายเดือน
+          </button>
+          <button className={`wq-range-btn${rangeMode === 'all' ? ' active' : ''}`} onClick={() => handleRangeChange('all')}>
+            <Layers size={15}/> ทั้งหมด
           </button>
         </div>
 
-        {/* ── Calendar (day mode only) ── */}
+        {/* ── Calendar (ซ่อนเมื่อเลือกเป็น All) ── */}
         <AnimatePresence>
-          {rangeMode === 'day' && (
+          {rangeMode !== 'all' && (
             <motion.div
               key="calendar"
               initial={{ opacity:0, height:0, marginBottom:0 }}
@@ -361,7 +404,10 @@ const WaterQuality = () => {
               transition={{ duration:0.25 }}
               style={{ overflow:'hidden' }}
             >
-              <div className="wq-section-label" style={{ marginTop:24 }}>เลือกวันที่</div>
+              <div className="wq-section-label" style={{ marginTop:24 }}>
+                {rangeMode === 'day' ? 'เลือกวันที่' : 
+                 rangeMode === 'week' ? 'เลือกวันสิ้นสุด (ดูย้อนหลัง 7 วัน)' : 'เลือกเดือน'}
+              </div>
               <Calendar allData={allData} selectedDate={selDate} onSelectDate={handleDateSelect}/>
             </motion.div>
           )}
@@ -392,7 +438,7 @@ const WaterQuality = () => {
           {activeData.length === 0 ? (
             <div className="wq-empty">
               <span className="wq-empty-icon">📭</span>
-              {rangeMode === 'day' ? 'ไม่มีข้อมูลในวันที่เลือก' : 'ไม่มีข้อมูล'}
+              {rangeMode === 'all' ? 'ไม่มีข้อมูลในระบบ' : 'ไม่มีข้อมูลในช่วงเวลาที่เลือก'}
             </div>
           ) : viewMode === 'chart' ? (
             <div>
@@ -427,7 +473,7 @@ const WaterQuality = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <TableRows rows={pagedData} showDate={rangeMode === 'all'}/>
+                    <TableRows rows={pagedData} showDate={rangeMode !== 'day'}/>
                   </tbody>
                 </table>
               </div>
