@@ -1,321 +1,164 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
-
-:root {
-  --auth-bg: #06141f;
-  --auth-panel: rgba(255, 255, 255, 0.88);
-  --auth-panel-strong: rgba(255, 255, 255, 0.97);
-  --auth-text: #0f172a;
-  --auth-muted: #5b6b7f;
-  --auth-line: rgba(15, 23, 42, 0.1);
-  --auth-accent: #0f766e;
-  --auth-accent-dark: #115e59;
-  --auth-highlight: #22d3ee;
-  --auth-shadow: 0 24px 70px rgba(6, 20, 31, 0.22);
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Noto Sans Thai', sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(34, 211, 238, 0.2), transparent 30%),
-    radial-gradient(circle at right, rgba(45, 212, 191, 0.18), transparent 28%),
-    linear-gradient(135deg, #03131d 0%, #0a2230 45%, #0e3643 100%);
-}
-
+/* Layout หลัก: ซ้าย/ขวา */
 .auth-wrapper {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(320px, 1.05fr) minmax(340px, 0.95fr);
-  position: relative;
-  overflow: hidden;
+  grid-template-columns: 1fr 1fr;
+  background: #e9edf2; /* โทนเทาซอฟต์ ๆ ฝั่งซ้าย */
 }
 
-.auth-wrapper::before,
-.auth-wrapper::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(8px);
-}
-
-.auth-wrapper::before {
-  width: 320px;
-  height: 320px;
-  left: -120px;
-  top: 10%;
-  background: rgba(34, 211, 238, 0.16);
-}
-
-.auth-wrapper::after {
-  width: 360px;
-  height: 360px;
-  right: -120px;
-  bottom: -60px;
-  background: rgba(45, 212, 191, 0.12);
-}
-
+/* ฝั่งซ้าย */
 .auth-left {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 28px;
-  padding: 56px clamp(24px, 6vw, 84px);
-}
-
-.brand {
   display: grid;
-  gap: 10px;
-  max-width: 520px;
+  grid-template-rows: auto 1fr;
+  gap: 24px;
+  align-content: center;
+  padding: 48px clamp(24px, 6vw, 80px);
 }
 
-.brand::before {
-  content: 'Aquaculture intelligence';
-  display: inline-flex;
-  width: fit-content;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
+/* แบรนดิ้ง */
 .brand-title {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(34px, 5vw, 60px);
-  line-height: 1;
+  font-size: clamp(28px, 4vw, 40px);
   font-weight: 800;
-  letter-spacing: -0.04em;
-  color: #f8fafc;
+  letter-spacing: 0.5px;
+  color: #1f2a37;
+  margin: 6px 0 0 0;
 }
-
-.brand-title .brand-icon {
-  width: clamp(48px, 6vw, 78px);
-  height: clamp(48px, 6vw, 78px);
-  object-fit: contain;
-  filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.18));
-}
-
 .brand-sub {
-  margin: 0;
-  max-width: 520px;
-  color: rgba(226, 232, 240, 0.8);
-  font-size: 15px;
-  line-height: 1.7;
+  color: #475569;
+  margin: 6px 0 0 0;
+}
+.brand-logo {
+  width: 56px;
+  height: 56px;
 }
 
+/* การ์ดฟอร์ม */
 .form-card {
-  position: relative;
-  width: min(100%, 500px);
-  background: linear-gradient(180deg, var(--auth-panel) 0%, var(--auth-panel-strong) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 28px;
-  padding: clamp(24px, 4vw, 34px);
-  box-shadow: var(--auth-shadow);
-  backdrop-filter: blur(18px);
-}
-
-.form-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.55), rgba(15, 118, 110, 0.08));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
+  width: 100%;
+  max-width: 100%;
+  background: #ffffffcc; /* ขาวโปร่งเล็กน้อย */
+  backdrop-filter: blur(3px);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 .form-title {
-  margin: 0 0 8px;
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(24px, 3vw, 30px);
-  color: var(--auth-text);
-}
-
-.form-card[aria-label='เข้าสู่ระบบ']::after {
-  content: 'กรุณาเข้าสู่ระบบเพื่อดูข้อมูลอุปกรณ์และคุณภาพน้ำล่าสุด';
-  display: block;
-  margin-bottom: 22px;
-  color: var(--auth-muted);
-  font-size: 14px;
-  line-height: 1.7;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin: 4px 0 12px;
+  color: #111827;
 }
 
 .form-grid {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .form-label {
   display: grid;
-  gap: 8px;
-  color: var(--auth-text);
+  gap: 6px;
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.4px;
+  color: #374151;
 }
 
 .form-input {
   width: 100%;
-  height: 52px;
-  border-radius: 16px;
-  border: 1px solid var(--auth-line);
-  padding: 0 16px;
-  background: rgba(255, 255, 255, 0.78);
-  color: var(--auth-text);
-  font-size: 15px;
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 0 12px;
+  background: #fff;
+  font-size: 14px;
   outline: none;
 }
-
-.form-input::placeholder {
-  color: #94a3b8;
-}
-
 .form-input:focus {
-  border-color: rgba(15, 118, 110, 0.5);
-  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.14);
-  transform: translateY(-1px);
+  border-color: #334155;
+  box-shadow: 0 0 0 3px rgba(51, 65, 85, 0.15);
 }
 
 .btn-primary {
   margin-top: 8px;
-  min-height: 54px;
-  border: none;
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--auth-accent) 0%, var(--auth-highlight) 100%);
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid #1f2a37;
+  background: #1f2a37;
   color: #fff;
-  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.6px;
   cursor: pointer;
-  box-shadow: 0 18px 34px rgba(15, 118, 110, 0.28);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
-
 .btn-primary:hover {
-  filter: brightness(1.04);
-  transform: translateY(-2px);
-  box-shadow: 0 24px 38px rgba(15, 118, 110, 0.32);
+  filter: brightness(1.05);
 }
 
+/* ปุ่มลืมรหัสผ่าน */
 .forgot-password-link {
-  min-height: 12px;
-}
-
-.msg {
-  margin: 16px 0 0;
-  padding: 12px 14px;
-  border-radius: 14px;
   font-size: 14px;
-  font-weight: 600;
-}
-
-.msg.ok {
-  color: #166534;
-  background: rgba(220, 252, 231, 0.95);
-}
-
-.msg.err {
-  color: #b91c1c;
-  background: rgba(254, 226, 226, 0.95);
-}
-
-.alt-link {
-  margin: 18px 0 0;
-  color: var(--auth-muted);
-  font-size: 14px;
-}
-
-.alt-link a {
-  color: var(--auth-accent-dark);
-  font-weight: 700;
+  color: #1f2a37;
+  text-align: right;
+  display: block;
+  margin-top: -8px;
+  margin-bottom: 12px;
   text-decoration: none;
 }
-
-.alt-link a:hover {
+.forgot-password-link:hover {
   text-decoration: underline;
 }
 
+/* ข้อความระบบ */
+.msg {
+  margin-top: 10px;
+  font-size: 14px;
+}
+.msg.ok {
+  color: #16a34a;
+}
+.msg.err {
+  color: #dc2626;
+}
+
+.alt-link {
+  margin-top: 8px;
+  font-size: 14px;
+}
+.alt-link a {
+  color: #1f2a37;
+  font-weight: 600;
+}
+
+/* ฝั่งขวา: hero image */
 .auth-hero {
-  position: relative;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  isolation: isolate;
 }
 
-.auth-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(4, 12, 21, 0.16), rgba(4, 12, 21, 0.58));
-}
-
-.auth-hero::after {
-  content: 'ตรวจสอบค่าคุณภาพน้ำแบบเรียลไทม์ พร้อมตัดสินใจได้เร็วขึ้นในทุกบ่อเลี้ยง';
-  position: absolute;
-  left: clamp(24px, 4vw, 48px);
-  right: clamp(24px, 4vw, 48px);
-  bottom: clamp(24px, 5vw, 52px);
-  padding: 20px 24px;
-  border-radius: 24px;
-  background: rgba(7, 18, 30, 0.55);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #f8fafc;
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1.6;
-  z-index: 1;
-}
-
-@media (max-width: 1024px) {
+/* Responsive: จอเล็กให้ซ้อนเป็นคอลัมน์เดียว */
+@media (max-width: 900px) {
   .auth-wrapper {
     grid-template-columns: 1fr;
   }
-
   .auth-hero {
-    min-height: 260px;
-    order: -1;
+    display: none;
   }
-
   .auth-left {
-    padding-top: 24px;
+    padding: 32px 20px;
+  }
+  .form-card {
+    max-width: 520px;
   }
 }
 
-@media (max-width: 720px) {
-  .auth-left {
-    padding: 20px 18px 32px;
-  }
+.brand-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; /* ระยะห่างข้อความ–ไอคอน */
+}
 
-  .auth-hero {
-    min-height: 220px;
-  }
-
-  .auth-hero::after {
-    font-size: 16px;
-    line-height: 1.5;
-  }
-
-  .form-card {
-    border-radius: 24px;
-  }
+.brand-title .brand-icon {
+  width: 80px; /* ปรับขนาดที่ต้องการ */
+  height: 80px;
 }
