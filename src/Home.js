@@ -109,12 +109,12 @@ const Home = () => {
   };
 
   /* Delete Device Logic */
-  const confirmDeleteDevice = () => {
+const confirmDeleteDevice = () => {
     const deviceName = devices.find(d => d.device_id === selectedDeviceId)?.device_name || 'อุปกรณ์นี้';
     setModal({
       isOpen: true,
       title: 'ยืนยันการลบอุปกรณ์',
-      content: `คุณแน่ใจหรือไม่ว่าต้องการลบเซนเซอร์ "${deviceName}" ? ข้อมูลทั้งหมดที่เกี่ยวข้องจะถูกลบและไม่สามารถกู้คืนได้`,
+      content: `คุณแน่ใจหรือไม่ว่าต้องการนำอุปกรณ์ "${deviceName}" ออกจากบัญชีของคุณ? (ผู้ใช้อื่นที่เชื่อมต่ออุปกรณ์นี้อยู่จะไม่ได้รับผลกระทบ)`,
       isConfirm: true,
       onConfirm: executeDeleteDevice
     });
