@@ -1,574 +1,503 @@
-/* ===================================
-   SmartFarm AI — Water Quality Page
-   Design: matches Home.css Deep Ocean
-   Mobile-first, production-grade
-   =================================== */
+// src/water-quality.js
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import axios from 'axios';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import config from './config';
+import { checkQuality } from './waterStandard';
+import './water-quality.css';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  ArrowLeft, Droplets, Wind, Thermometer, Zap,
+  ChevronDown, ChevronLeft, ChevronRight, AlertTriangle,
+  CheckCircle, BarChart2, List, CalendarDays, Layers
+} from 'lucide-react';
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap');
+// ─── Constants ────────────────────────────────────────────────────────────────
+const THAI_MONTHS = [
+  'มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+  'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม',
+];
+const WEEKDAYS = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+const ITEMS_PER_PAGE = 10;
 
-:root {
-  --ink:         #0d1b2a;
-  --ink-soft:    #1e3a5f;
-  --teal-deep:   #0a6b5c;
-  --teal:        #0d9488;
-  --teal-bright: #14b8a6;
-  --teal-glow:   #5eead4;
-  --teal-pale:   #ccfbf1;
-  --sky:         #38bdf8;
-  --amber:       #f59e0b;
-  --rose:        #f43f5e;
-  --green:       #22c55e;
+const PARAMS = [
+  { key: 'dissolved_oxygen', label: 'ออกซิเจน (DO)', color: '#0d9488' },
+  { key: 'ph',               label: 'ค่า pH',          color: '#38bdf8' },
+  { key: 'temperature',      label: 'อุณหภูมิ',         color: '#f59e0b' },
+  { key: 'turbidity',        label: 'ความขุ่น',          color: '#a78bfa' },
+];
 
-  --bg:          #f0faf8;
-  --surface:     #ffffff;
-  --border:      #d1faf4;
-  --border-soft: #e6f7f5;
-
-  --text:        #0d1b2a;
-  --text-2:      #334e5e;
-  --text-muted:  #6b8fa3;
-
-  --shadow-card: 0 2px 12px rgba(13,27,42,0.07);
-  --shadow-md:   0 4px 20px rgba(13,155,136,0.10);
-
-  --radius-sm:   12px;
-  --radius-md:   18px;
-  --radius-lg:   24px;
-  --radius-pill: 999px;
-
-  --font-display: 'Outfit', sans-serif;
-  --font-body:    'Noto Sans Thai', sans-serif;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function toDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-
-body {
-  background: var(--bg);
-  font-family: var(--font-body);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
+function todayKey() { return toDateKey(new Date()); }
+function fmtDate(key) {
+  const d = new Date(key + 'T00:00:00');
+  return `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear() + 543}`;
+}
+function statusClass(q) {
+  return q.status === 'normal' ? 'ok' : q.status === 'warning' ? 'warn' : 'bad';
 }
 
-/* ─── Page shell ─────────────────────────────────────────────────────────────── */
-.wq-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+// ─── Custom Tooltip ───────────────────────────────────────────────────────────
+const ChartTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background:'#fff', border:'1px solid #d1faf4', borderRadius:12,
+      padding:'10px 14px', boxShadow:'0 4px 20px rgba(13,155,136,0.12)', fontSize:13,
+    }}>
+      <div style={{ color:'#6b8fa3', marginBottom:4, fontWeight:600 }}>{label}</div>
+      {payload.map((p,i) => (
+        <div key={i} style={{ color:p.color, fontWeight:700, fontSize:16 }}>
+          {p.name}: {p.value}
+        </div>
+      ))}
+    </div>
+  );
+};
 
-/* ─── Header (matches Home header) ──────────────────────────────────────────── */
-.wq-header {
-  background: var(--ink);
-  padding: 0 20px;
-  height: 60px;
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
+// ─── Stat Card ────────────────────────────────────────────────────────────────
+const StatCard = ({ icon: Icon, label, value, unit, type }) => {
+  const q   = checkQuality(type, value);
+  const cls = statusClass(q);
+  const disp = (value !== undefined && value !== null && value !== '') ? value : '—';
+  return (
+    <div className={`wq-stat-card ${cls}`}>
+      <div className="wq-stat-lbl"><Icon size={13}/>{label}</div>
+      <div><span className="wq-stat-val">{disp}</span>{unit && <span className="wq-stat-unit">{unit}</span>}</div>
+      <span className="wq-stat-badge">{q.msg || 'รอข้อมูล'}</span>
+    </div>
+  );
+};
 
-.wq-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
+// ─── Calendar ─────────────────────────────────────────────────────────────────
+const Calendar = ({ allData, selectedDate, onSelectDate }) => {
+  const today = new Date();
+  const [viewYear,  setViewYear]  = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
 
-.wq-back-btn {
-  width: 36px; height: 36px;
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.8);
-  border-radius: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
-}
-.wq-back-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  const dayStatusMap = useMemo(() => {
+    const map = {};
+    allData.forEach(row => {
+      const key = toDateKey(new Date(row.recorded_at));
+      const statuses = [
+        checkQuality('do',        row.dissolved_oxygen).status,
+        checkQuality('ph',        row.ph).status,
+        checkQuality('temp',      row.temperature).status,
+        checkQuality('turbidity', row.turbidity).status,
+      ];
+      const worst = statuses.includes('critical') ? 'bad'
+                  : statuses.includes('warning')  ? 'warn' : 'ok';
+      if (!map[key] || map[key] === 'ok') map[key] = worst;
+    });
+    return map;
+  }, [allData]);
 
-.wq-page-title {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
-  color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y-1); }
+    else setViewMonth(m => m-1);
+  };
+  const nextMonth = () => {
+    const now = new Date();
+    if (viewYear > now.getFullYear() || (viewYear === now.getFullYear() && viewMonth >= now.getMonth())) return;
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y+1); }
+    else setViewMonth(m => m+1);
+  };
 
-/* Device selector in header */
-.wq-device-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: var(--radius-pill);
-  padding: 7px 14px;
-  flex-shrink: 0;
-  transition: background 0.2s;
-}
-.wq-device-pill:hover { background: rgba(255,255,255,0.15); }
+  const firstDay    = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const todayStr    = todayKey();
+  const cantNext    = viewYear > today.getFullYear() ||
+    (viewYear === today.getFullYear() && viewMonth >= today.getMonth());
 
-.wq-device-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--teal-glow);
-  box-shadow: 0 0 5px var(--teal-glow);
-  animation: pulse-dot 2s ease-in-out infinite;
-  flex-shrink: 0;
-}
-@keyframes pulse-dot {
-  0%,100% { opacity:1; transform:scale(1); }
-  50%      { opacity:0.5; transform:scale(0.85); }
-}
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells.push({ d, key, isFuture: key > todayStr, status: dayStatusMap[key] });
+  }
 
-.wq-device-select {
-  border: none;
-  background: transparent;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
-  color: #fff;
-  outline: none;
-  cursor: pointer;
-  appearance: none;
-  max-width: 120px;
-}
-.wq-device-select option { background: var(--ink); color: #fff; }
+  return (
+    <div className="wq-cal-box">
+      <div className="wq-cal-nav">
+        <button className="wq-cal-arrow" onClick={prevMonth}><ChevronLeft size={16}/></button>
+        <span className="wq-cal-month">{THAI_MONTHS[viewMonth]} {viewYear + 543}</span>
+        <button className="wq-cal-arrow" onClick={nextMonth}
+          style={{ opacity: cantNext ? 0.35:1, cursor: cantNext ? 'default':'pointer' }}>
+          <ChevronRight size={16}/>
+        </button>
+      </div>
 
-/* ─── Body ───────────────────────────────────────────────────────────────────── */
-.wq-body {
-  flex: 1;
-  padding: 20px 16px 40px;
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
-}
+      <div className="wq-cal-weekdays">
+        {WEEKDAYS.map(w => <div key={w} className="wq-cal-wday">{w}</div>)}
+      </div>
 
-/* ─── Section label (same as Home) ──────────────────────────────────────────── */
-.wq-section-label {
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 12px;
-  margin-top: 24px;
-  padding-left: 2px;
-}
-.wq-section-label:first-child { margin-top: 0; }
+      <div className="wq-cal-grid">
+        {cells.map((cell, i) => {
+          if (!cell) return <div key={`e-${i}`} className="wq-cal-day empty"/>;
+          const cls = [
+            'wq-cal-day',
+            cell.isFuture ? 'future' : '',
+            cell.key === todayStr && !cell.isFuture ? 'today' : '',
+            cell.key === selectedDate ? 'selected' : '',
+            !cell.isFuture && cell.status ? `has-${cell.status}` : '',
+          ].filter(Boolean).join(' ');
+          return (
+            <div key={cell.key} className={cls}
+              onClick={() => !cell.isFuture && onSelectDate(cell.key)}>
+              <span className="dn">{cell.d}</span>
+              {!cell.isFuture && cell.status && <span className="ddot"/>}
+            </div>
+          );
+        })}
+      </div>
 
-/* ─── Error banner ───────────────────────────────────────────────────────────── */
-.wq-error {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff1f3;
-  border: 1px solid #fecdd3;
-  color: var(--rose);
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 20px;
-}
+      <div style={{ display:'flex', gap:14, marginTop:14, paddingTop:12, borderTop:'1px solid var(--border-soft)', flexWrap:'wrap' }}>
+        {[['#22c55e','ปกติ'],['#f59e0b','ควรระวัง'],['#f43f5e','อันตราย']].map(([c,l]) => (
+          <div key={l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>
+            <span style={{ width:8, height:8, borderRadius:'50%', background:c, display:'inline-block' }}/>
+            {l}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
-/* ─── Stat cards (mini, 4-up) ────────────────────────────────────────────────── */
-.wq-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-@media (min-width: 480px) {
-  .wq-stats-grid { grid-template-columns: repeat(4, 1fr); }
-}
+// ─── Table body (shared between both modes) ───────────────────────────────────
+const TableRows = ({ rows, showDate }) => rows.map((row, i) => {
+  const qPH   = checkQuality('ph',        row.ph);
+  const qDO   = checkQuality('do',        row.dissolved_oxygen);
+  const qTemp = checkQuality('temp',      row.temperature);
+  const qTurb = checkQuality('turbidity', row.turbidity);
+  const gs = q => ({ color: q.status !== 'normal' ? q.color : 'var(--text)', fontWeight: q.status !== 'normal' ? 700 : 400 });
+  const alerts = [
+    qPH.status   !== 'normal' && { msg:`pH: ${qPH.msg}`,   cls: qPH.status   === 'critical' ? 'bad':'warn' },
+    qDO.status   !== 'normal' && { msg:`DO: ${qDO.msg}`,   cls: qDO.status   === 'critical' ? 'bad':'warn' },
+    qTemp.status !== 'normal' && { msg:`T: ${qTemp.msg}`,  cls: qTemp.status === 'critical' ? 'bad':'warn' },
+    qTurb.status !== 'normal' && { msg:`Tu: ${qTurb.msg}`, cls: qTurb.status === 'critical' ? 'bad':'warn' },
+  ].filter(Boolean);
+  const dt = new Date(row.recorded_at);
+  return (
+    <tr key={i}>
+      <td style={{ color:'var(--text-muted)', fontSize:12, whiteSpace:'nowrap' }}>
+        {showDate && <span style={{ marginRight:4 }}>
+          {dt.toLocaleDateString('th-TH', { day:'numeric', month:'short' })}
+        </span>}
+        {dt.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' })}
+      </td>
+      <td style={gs(qPH)}>{row.ph ?? '—'}</td>
+      <td style={gs(qDO)}>{row.dissolved_oxygen ?? '—'}</td>
+      <td style={gs(qTemp)}>{row.temperature ?? '—'}</td>
+      <td style={gs(qTurb)}>{row.turbidity ?? '—'}</td>
+      <td>
+        {alerts.length > 0 ? (
+          <div style={{ display:'flex', flexWrap:'wrap', gap:2 }}>
+            {alerts.map((a,j) => <span key={j} className={`wq-alert-chip wq-chip-${a.cls}`}>{a.msg}</span>)}
+          </div>
+        ) : (
+          <span className="wq-alert-chip wq-chip-ok" style={{ display:'inline-flex', alignItems:'center', gap:3 }}>
+            <CheckCircle size={10}/> ปกติ
+          </span>
+        )}
+      </td>
+    </tr>
+  );
+});
 
-.wq-stat-card {
-  background: var(--surface);
-  border: 1.5px solid var(--border-soft);
-  border-radius: var(--radius-md);
-  padding: 14px 12px;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.wq-stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.wq-stat-card::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 14px; bottom: 14px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: #e2e8f0;
-}
-.wq-stat-card.ok::before   { background: var(--green); }
-.wq-stat-card.warn::before { background: var(--amber); }
-.wq-stat-card.bad::before  { background: var(--rose); }
-.wq-stat-card.warn { background: #fffdf7; border-color: rgba(245,158,11,0.2); }
-.wq-stat-card.bad  { background: #fff6f8; border-color: rgba(244,63,94,0.15); }
-.wq-stat-card.ok   { border-color: rgba(34,197,94,0.15); }
+// ─── Main ─────────────────────────────────────────────────────────────────────
+const WaterQuality = () => {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deviceId = searchParams.get('deviceId');
 
-.wq-stat-lbl {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 8px;
-}
-.wq-stat-val {
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -1px;
-  line-height: 1;
-}
-.wq-stat-unit { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-left: 2px; }
-.wq-stat-badge {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  margin-top: 6px;
-  background: #f1f5f9;
-  color: var(--text-muted);
-}
-.wq-stat-card.ok   .wq-stat-badge { background: #dcfce7; color: #166534; }
-.wq-stat-card.warn .wq-stat-badge { background: #fef9c3; color: #854d0e; }
-.wq-stat-card.bad  .wq-stat-badge { background: #ffe4e6; color: #9f1239; }
+  const [allData,    setAllData]    = useState([]);
+  const [devices,    setDevices]    = useState([]);
+  const [error,      setError]      = useState('');
+  const [rangeMode,  setRangeMode]  = useState('day');   // 'all' | 'day' | 'week' | 'month'
+  const [viewMode,   setViewMode]   = useState('chart'); // 'chart' | 'table'
+  const [selParam,   setSelParam]   = useState('dissolved_oxygen');
+  const [selDate,    setSelDate]    = useState(todayKey());
+  const [curPage,    setCurPage]    = useState(1);
 
-/* ─── Range toggle (all / day) ───────────────────────────────────────────────── */
-.wq-range-toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
+  // ── Fetch devices ──
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    axios.get(`${config.API_BASE_URL}/member/devices`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(res => {
+      setDevices(res.data);
+      if (!deviceId && res.data.length > 0) setSearchParams({ deviceId: res.data[0].device_id });
+    }).catch(() => {});
+  }, [deviceId, setSearchParams]);
 
-.wq-range-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 13px 12px;
-  border-radius: var(--radius-md);
-  border: 1.5px solid var(--border-soft);
-  background: var(--surface);
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.18s;
-  -webkit-tap-highlight-color: transparent;
-}
+  // ── Fetch water quality ──
+  useEffect(() => {
+    if (!deviceId) return;
+    const token = localStorage.getItem('token');
+    if (!token) { navigate('/login'); return; }
+    const run = async () => {
+      try {
+        const res = await axios.get(
+          `${config.API_BASE_URL}/member/water-quality?deviceId=${deviceId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setAllData(res.data || []);
+        setError('');
+      } catch (e) {
+        if (e.response?.status === 403) navigate('/login');
+        else setError('ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการเชื่อมต่ออุปกรณ์');
+      }
+    };
+    run();
+    const id = setInterval(run, 10000);
+    return () => clearInterval(id);
+  }, [navigate, deviceId]);
 
-.wq-range-btn:hover {
-  border-color: var(--teal-bright);
-  color: var(--teal);
-  background: var(--teal-pale);
-}
+  // ── Active dataset depends on mode ──
+  const activeData = useMemo(() => {
+    if (rangeMode === 'all') return allData;
+    
+    if (rangeMode === 'day') {
+      return allData.filter(row => toDateKey(new Date(row.recorded_at)) === selDate);
+    }
+    
+    if (rangeMode === 'week') {
+      // ดึงข้อมูล 7 วัน (รวมวันที่เลือกเป็นวันสุดท้าย)
+      const endObj = new Date(selDate + 'T00:00:00');
+      const startObj = new Date(selDate + 'T00:00:00');
+      startObj.setDate(startObj.getDate() - 6);
+      
+      const endStr = toDateKey(endObj);
+      const startStr = toDateKey(startObj);
+      
+      return allData.filter(row => {
+        const dStr = toDateKey(new Date(row.recorded_at));
+        return dStr >= startStr && dStr <= endStr;
+      });
+    }
 
-.wq-range-btn.active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(13,27,42,0.2);
-}
+    if (rangeMode === 'month') {
+      // ดึงข้อมูลเฉพาะเดือนและปีที่ตรงกับวันที่เลือก (YYYY-MM)
+      const prefix = selDate.substring(0, 7); 
+      return allData.filter(row => toDateKey(new Date(row.recorded_at)).startsWith(prefix));
+    }
+    
+    return allData;
+  }, [allData, rangeMode, selDate]);
 
-/* ─── Calendar ───────────────────────────────────────────────────────────────── */
-.wq-cal-box {
-  background: var(--surface);
-  border: 1.5px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  padding: 14px 14px 10px;
-  box-shadow: var(--shadow-card);
-  /* Cap width so cells never grow too tall on wide screens */
-  max-width: 420px;
-}
+  const latest = activeData[0] || {};
 
-.wq-cal-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.wq-cal-month {
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-}
-.wq-cal-arrow {
-  width: 28px; height: 28px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.wq-cal-arrow:hover { background: var(--teal-pale); color: var(--teal); border-color: var(--teal-bright); }
+  const chartData = useMemo(() => [...activeData].reverse().map(row => {
+    const d = new Date(row.recorded_at);
+    let timeStr = '';
+    // แสดงเวลาอย่างเดียวถ้ารายวัน แต่ถ้าดูหลายวันให้แสดงวันที่ด้วย
+    if (rangeMode === 'day') {
+      timeStr = d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+    } else {
+      timeStr = d.toLocaleDateString('th-TH', { day:'numeric', month:'short' }) + ' ' + 
+                d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
+    }
+    
+    return {
+      time: timeStr,
+      dissolved_oxygen: row.dissolved_oxygen,
+      ph:               row.ph,
+      temperature:      row.temperature,
+      turbidity:        row.turbidity,
+    };
+  }), [activeData, rangeMode]);
 
-.wq-cal-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-  margin-bottom: 2px;
-}
-.wq-cal-wday {
-  text-align: center;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-  padding: 2px 0 4px;
-  font-family: var(--font-display);
-}
+  const totalPages = Math.ceil(activeData.length / ITEMS_PER_PAGE);
+  const pagedData  = activeData.slice((curPage-1)*ITEMS_PER_PAGE, curPage*ITEMS_PER_PAGE);
+  const activeParam = PARAMS.find(p => p.key === selParam) || PARAMS[0];
 
-.wq-cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-}
+  const handleRangeChange = useCallback(mode => {
+    setRangeMode(mode);
+    setCurPage(1);
+  }, []);
 
-/* Fixed height cells — no aspect-ratio which causes tall cells on wide screens */
-.wq-cal-day {
-  height: 36px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1.5px solid transparent;
-  transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.wq-cal-day:hover:not(.empty):not(.future) { background: var(--teal-pale); border-color: var(--teal-bright); }
+  const handleDateSelect = useCallback(key => {
+    setSelDate(key);
+    setCurPage(1);
+  }, []);
 
-.wq-cal-day .dn {
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1;
-}
-.wq-cal-day.empty { cursor: default; }
-.wq-cal-day.future .dn { color: #c8d8e4; }
-.wq-cal-day.future { cursor: default; }
+  // สร้างคำอธิบายหัวข้ออิงตาม Range
+  let sectionLabel = '';
+  if (rangeMode === 'all') {
+    sectionLabel = `ค่าล่าสุด — ข้อมูลทั้งหมด (${allData.length} รายการ)`;
+  } else if (rangeMode === 'day') {
+    sectionLabel = `ค่าล่าสุด — ${fmtDate(selDate)}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
+  } else if (rangeMode === 'week') {
+    const startObj = new Date(selDate + 'T00:00:00');
+    startObj.setDate(startObj.getDate() - 6);
+    sectionLabel = `ค่าล่าสุด — ${fmtDate(toDateKey(startObj))} ถึง ${fmtDate(selDate)}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
+  } else if (rangeMode === 'month') {
+    const [y, m] = selDate.split('-');
+    sectionLabel = `ค่าล่าสุด — ประจำเดือน ${THAI_MONTHS[parseInt(m)-1]} ${parseInt(y)+543}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
+  }
 
-/* dot indicator */
-.wq-cal-day .ddot {
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  margin-top: 2px;
-}
-.wq-cal-day.has-ok   .ddot { background: var(--green); }
-.wq-cal-day.has-warn .ddot { background: var(--amber); }
-.wq-cal-day.has-bad  .ddot { background: var(--rose); }
+  return (
+    <motion.div className="wq-page" initial={{ opacity:0 }} animate={{ opacity:1 }} transition={{ duration:0.3 }}>
 
-/* selected */
-.wq-cal-day.selected {
-  background: var(--teal);
-  border-color: var(--teal-deep);
-}
-.wq-cal-day.selected .dn { color: #fff; }
-.wq-cal-day.selected .ddot { background: rgba(255,255,255,0.7); }
+      {/* ── Header ── */}
+      <header className="wq-header">
+        <div className="wq-header-left">
+          <button className="wq-back-btn" onClick={() => navigate('/')}>
+            <ArrowLeft size={17}/>
+          </button>
+          <span className="wq-page-title">ประวัติคุณภาพน้ำ</span>
+        </div>
+        {devices.length > 0 && (
+          <div className="wq-device-pill">
+            <span className="wq-device-dot"/>
+            <select className="wq-device-select" value={deviceId||''}
+              onChange={e => setSearchParams({ deviceId: e.target.value })}>
+              {devices.map(d => <option key={d.device_id} value={d.device_id}>{d.device_name}</option>)}
+            </select>
+            <ChevronDown size={13} style={{ color:'rgba(255,255,255,0.5)', flexShrink:0 }}/>
+          </div>
+        )}
+      </header>
 
-/* today (not selected) */
-.wq-cal-day.today:not(.selected) {
-  border-color: var(--teal-bright);
-  background: var(--teal-pale);
-}
-.wq-cal-day.today:not(.selected) .dn { color: var(--teal-deep); }
+      {/* ── Body ── */}
+      <main className="wq-body">
 
-/* ─── Analysis box ───────────────────────────────────────────────────────────── */
-.wq-analysis {
-  background: var(--surface);
-  border: 1.5px solid var(--border-soft);
-  border-radius: var(--radius-lg);
-  padding: 20px 18px;
-  box-shadow: var(--shadow-card);
-}
+        {/* Error */}
+        <AnimatePresence>
+          {error && (
+            <motion.div className="wq-error" initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}>
+              <AlertTriangle size={16} style={{ flexShrink:0 }}/> {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-/* Tab bar */
-.wq-tabs {
-  display: flex;
-  gap: 4px;
-  background: var(--bg);
-  border: 1px solid var(--border-soft);
-  padding: 4px;
-  border-radius: var(--radius-sm);
-  width: fit-content;
-  margin-bottom: 20px;
-}
+        {/* ── Range toggle ── */}
+        <div className="wq-section-label">โหมดการดูข้อมูล</div>
+        <div className="wq-range-toggle" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <button className={`wq-range-btn${rangeMode === 'day' ? ' active' : ''}`} onClick={() => handleRangeChange('day')}>
+            <CalendarDays size={15}/> รายวัน
+          </button>
+          <button className={`wq-range-btn${rangeMode === 'week' ? ' active' : ''}`} onClick={() => handleRangeChange('week')}>
+            <CalendarDays size={15}/> 7 วันย้อนหลัง
+          </button>
+          <button className={`wq-range-btn${rangeMode === 'month' ? ' active' : ''}`} onClick={() => handleRangeChange('month')}>
+            <CalendarDays size={15}/> รายเดือน
+          </button>
+          <button className={`wq-range-btn${rangeMode === 'all' ? ' active' : ''}`} onClick={() => handleRangeChange('all')}>
+            <Layers size={15}/> ทั้งหมด
+          </button>
+        </div>
 
-.wq-tab {
-  padding: 7px 16px;
-  border: none;
-  background: transparent;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.18s;
-  -webkit-tap-highlight-color: transparent;
-}
-.wq-tab.active {
-  background: var(--surface);
-  color: var(--teal);
-  box-shadow: var(--shadow-card);
-}
+        {/* ── Calendar (ซ่อนเมื่อเลือกเป็น All) ── */}
+        <AnimatePresence>
+          {rangeMode !== 'all' && (
+            <motion.div
+              key="calendar"
+              initial={{ opacity:0, height:0, marginBottom:0 }}
+              animate={{ opacity:1, height:'auto', marginBottom:0 }}
+              exit={{ opacity:0, height:0, marginBottom:0 }}
+              transition={{ duration:0.25 }}
+              style={{ overflow:'hidden' }}
+            >
+              <div className="wq-section-label" style={{ marginTop:24 }}>
+                {rangeMode === 'day' ? 'เลือกวันที่' : 
+                 rangeMode === 'week' ? 'เลือกวันสิ้นสุด (ดูย้อนหลัง 7 วัน)' : 'เลือกเดือน'}
+              </div>
+              <Calendar allData={allData} selectedDate={selDate} onSelectDate={handleDateSelect}/>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-/* Param select */
-.wq-param-bar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 14px;
-}
-.wq-param-select {
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 7px 12px;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-.wq-param-select:focus { border-color: var(--teal-bright); }
+        {/* ── Stat cards ── */}
+        <div className="wq-section-label" style={{ marginTop:24 }}>{sectionLabel}</div>
+        <div className="wq-stats-grid">
+          <StatCard icon={Droplets}    label="pH"       value={latest.ph}               unit=""     type="ph"        />
+          <StatCard icon={Wind}        label="DO"       value={latest.dissolved_oxygen} unit="mg/L" type="do"        />
+          <StatCard icon={Thermometer} label="อุณหภูมิ" value={latest.temperature}      unit="°C"   type="temp"      />
+          <StatCard icon={Zap}         label="ความขุ่น"  value={latest.turbidity}        unit="NTU"  type="turbidity" />
+        </div>
 
-.wq-chart-wrap { height: 280px; width: 100%; }
+        {/* ── Analysis ── */}
+        <div className="wq-section-label">วิเคราะห์ข้อมูล</div>
+        <div className="wq-analysis">
 
-/* ─── Table ──────────────────────────────────────────────────────────────────── */
-.wq-table-wrap {
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-md);
-  overflow: auto;
-  max-height: 460px;
-}
+          <div className="wq-tabs">
+            <button className={`wq-tab${viewMode==='chart' ? ' active':''}`} onClick={() => setViewMode('chart')}>
+              <BarChart2 size={15}/> กราฟ
+            </button>
+            <button className={`wq-tab${viewMode==='table' ? ' active':''}`} onClick={() => setViewMode('table')}>
+              <List size={15}/> ตาราง
+            </button>
+          </div>
 
-.wq-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 560px;
-}
+          {activeData.length === 0 ? (
+            <div className="wq-empty">
+              <span className="wq-empty-icon">📭</span>
+              {rangeMode === 'all' ? 'ไม่มีข้อมูลในระบบ' : 'ไม่มีข้อมูลในช่วงเวลาที่เลือก'}
+            </div>
+          ) : viewMode === 'chart' ? (
+            <div>
+              <div className="wq-param-bar">
+                <select className="wq-param-select" value={selParam} onChange={e => setSelParam(e.target.value)}>
+                  {PARAMS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
+                </select>
+              </div>
+              <div className="wq-chart-wrap">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top:4, right:4, left:-20, bottom:0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e6f7f5"/>
+                    <XAxis dataKey="time" axisLine={false} tickLine={false}
+                      tick={{ fill:'#6b8fa3', fontSize:10 }} dy={6}
+                      interval={rangeMode==='all' ? Math.floor(chartData.length/6) : 'preserveStartEnd'}/>
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill:'#6b8fa3', fontSize:11 }}/>
+                    <Tooltip content={<ChartTooltip/>}/>
+                    <Line type="monotone" dataKey={selParam} stroke={activeParam.color}
+                      strokeWidth={2.5} dot={false} name={activeParam.label}
+                      activeDot={{ r:5, fill:activeParam.color }}/>
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="wq-table-wrap">
+                <table className="wq-table">
+                  <thead>
+                    <tr>
+                      <th>เวลา</th><th>pH</th><th>DO</th><th>Temp</th><th>Turb</th><th>สถานะ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <TableRows rows={pagedData} showDate={rangeMode !== 'day'}/>
+                  </tbody>
+                </table>
+              </div>
+              {totalPages > 1 && (
+                <div className="wq-pagination">
+                  <span className="wq-page-info">
+                    หน้า {curPage} / {totalPages} ({activeData.length} รายการ)
+                  </span>
+                  <div className="wq-page-btns">
+                    <button className="wq-page-btn" disabled={curPage===1} onClick={() => setCurPage(p => p-1)}>
+                      <ChevronLeft size={15}/>
+                    </button>
+                    <button className="wq-page-btn" disabled={curPage===totalPages} onClick={() => setCurPage(p => p+1)}>
+                      <ChevronRight size={15}/>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+    </motion.div>
+  );
+};
 
-.wq-table th, .wq-table td {
-  padding: 11px 14px;
-  text-align: left;
-  border-bottom: 1px solid var(--border-soft);
-  font-size: 13px;
-}
-
-.wq-table th {
-  background: var(--bg);
-  color: var(--text-muted);
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  position: sticky;
-  top: 0;
-  z-index: 5;
-}
-
-.wq-table tr:last-child td { border-bottom: none; }
-.wq-table tbody tr:hover { background: var(--bg); }
-
-.wq-alert-chip {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  white-space: nowrap;
-  margin: 1px 2px;
-}
-.wq-chip-ok   { background: #dcfce7; color: #166534; }
-.wq-chip-warn { background: #fef9c3; color: #854d0e; }
-.wq-chip-bad  { background: #ffe4e6; color: #9f1239; }
-
-/* ─── Pagination ─────────────────────────────────────────────────────────────── */
-.wq-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 2px 0;
-  border-top: 1px solid var(--border-soft);
-  margin-top: 8px;
-}
-.wq-page-info {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-.wq-page-btns { display: flex; gap: 6px; }
-.wq-page-btn {
-  width: 32px; height: 32px;
-  border: 1.5px solid var(--border);
-  background: var(--surface);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.wq-page-btn:hover:not(:disabled) { background: var(--teal-pale); border-color: var(--teal-bright); color: var(--teal); }
-.wq-page-btn:disabled { opacity: 0.35; cursor: default; }
-
-/* ─── Empty / loading state ─────────────────────────────────────────────────── */
-.wq-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  color: var(--text-muted);
-  gap: 10px;
-  font-size: 14px;
-}
-.wq-empty-icon { font-size: 36px; }
-
-/* ─── Responsive ─────────────────────────────────────────────────────────────── */
-@media (min-width: 480px) {
-  .wq-body { padding: 24px 24px 48px; }
-}
-@media (min-width: 680px) {
-  .wq-body { max-width: 860px; }
-  .wq-device-select { max-width: 180px; }
-}
-@media (max-width: 400px) {
-  .wq-cal-day .dn { font-size: 11px; }
-  .wq-cal-day .ddot { width: 4px; height: 4px; }
-  .wq-header { padding: 0 14px; }
-  .wq-page-title { font-size: 15px; }
-}
+export default WaterQuality;
