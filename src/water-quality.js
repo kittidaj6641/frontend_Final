@@ -6,11 +6,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import config from './config';
 import { checkQuality } from './waterStandard';
 import './water-quality.css';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import {
   ArrowLeft, Droplets, Wind, Thermometer, Zap,
   ChevronDown, ChevronLeft, ChevronRight, AlertTriangle,
-  CheckCircle, BarChart2, List, CalendarDays, Layers
+  CheckCircle, BarChart2, List, CalendarDays, Layers, Clock
 } from 'lucide-react';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -18,7 +18,6 @@ const THAI_MONTHS = [
   'มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
   'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม',
 ];
-const WEEKDAYS = ['อา','จ','อ','พ','พฤ','ศ','ส'];
 const ITEMS_PER_PAGE = 10;
 
 const PARAMS = [
@@ -41,17 +40,19 @@ function statusClass(q) {
   return q.status === 'normal' ? 'ok' : q.status === 'warning' ? 'warn' : 'bad';
 }
 
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
+// ─── Custom Tooltip สำหรับกราฟ ────────────────────────────────────────────────
 const ChartTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background:'#fff', border:'1px solid #d1faf4', borderRadius:12,
-      padding:'10px 14px', boxShadow:'0 4px 20px rgba(13,155,136,0.12)', fontSize:13,
+      background:'#ffffff', border:'1px solid #e2e8f0', borderRadius:'12px',
+      padding:'12px 16px', boxShadow:'0 10px 25px -5px rgba(0,0,0,0.1)', fontSize:'13px',
     }}>
-      <div style={{ color:'#6b8fa3', marginBottom:4, fontWeight:600 }}>{label}</div>
+      <div style={{ color:'#64748b', marginBottom:'6px', fontWeight:600, display:'flex', alignItems:'center', gap:'6px' }}>
+        <Clock size={14}/> {label}
+      </div>
       {payload.map((p,i) => (
-        <div key={i} style={{ color:p.color, fontWeight:700, fontSize:16 }}>
+        <div key={i} style={{ color:p.color, fontWeight:800, fontSize:'18px' }}>
           {p.name}: {p.value}
         </div>
       ))}
@@ -59,115 +60,109 @@ const ChartTooltip = ({ active, payload, label }) => {
   );
 };
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
+// ─── Stat Card ที่ปรับดีไซน์ใหม่ ──────────────────────────────────────────────────
 const StatCard = ({ icon: Icon, label, value, unit, type }) => {
   const q   = checkQuality(type, value);
   const cls = statusClass(q);
   const disp = (value !== undefined && value !== null && value !== '') ? value : '—';
+  
+  // กำหนดสีตามสถานะ
+  const colorMap = {
+    ok:   { text: '#059669', bg: '#ecfdf5', icon: '#10b981' },
+    warn: { text: '#d97706', bg: '#fffbeb', icon: '#f59e0b' },
+    bad:  { text: '#dc2626', bg: '#fef2f2', icon: '#ef4444' }
+  };
+  const theme = colorMap[cls];
+
   return (
-    <div className={`wq-stat-card ${cls}`}>
-      <div className="wq-stat-lbl"><Icon size={13}/>{label}</div>
-      <div><span className="wq-stat-val">{disp}</span>{unit && <span className="wq-stat-unit">{unit}</span>}</div>
-      <span className="wq-stat-badge">{q.msg || 'รอข้อมูล'}</span>
+    <div style={{ 
+      display:'flex', flexDirection:'column', padding:'16px', borderRadius:'20px', 
+      background:'#fff', boxShadow:'0 4px 15px rgba(0,0,0,0.03)', border:'1px solid #f1f5f9', 
+      position:'relative', overflow:'hidden' 
+    }}>
+      <div style={{ position:'absolute', top:'-15px', right:'-15px', opacity:0.04, transform:'scale(2)' }}>
+        <Icon size={64}/>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap:'6px', color:'#64748b', fontSize:'13px', fontWeight:700, marginBottom:'8px' }}>
+        <div style={{ background: theme.bg, padding:'6px', borderRadius:'10px', display:'flex' }}>
+          <Icon size={16} color={theme.icon}/>
+        </div>
+        {label}
+      </div>
+      <div style={{ display:'flex', alignItems:'baseline', gap:'4px', zIndex:1 }}>
+        <span style={{ fontSize:'26px', fontWeight:800, color:'#0f172a' }}>{disp}</span>
+        {unit && <span style={{ fontSize:'12px', color:'#94a3b8', fontWeight:600 }}>{unit}</span>}
+      </div>
+      <div style={{ marginTop:'auto', paddingTop:'12px', zIndex:1 }}>
+        <span style={{ 
+          display:'inline-flex', padding:'4px 10px', borderRadius:'8px', fontSize:'11px', 
+          fontWeight:700, background: theme.bg, color: theme.text, alignItems:'center', gap:'4px'
+        }}>
+          {cls === 'ok' && <CheckCircle size={12}/>}
+          {cls !== 'ok' && <AlertTriangle size={12}/>}
+          {q.msg || 'รอข้อมูล'}
+        </span>
+      </div>
     </div>
   );
 };
 
-// ─── Calendar ─────────────────────────────────────────────────────────────────
-const Calendar = ({ allData, selectedDate, onSelectDate }) => {
-  const today = new Date();
-  const [viewYear,  setViewYear]  = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
+// ─── Compact Date Selector (ส่วนเลือกวันที่แบบย่อขนาดเล็ก) ──────────────────────────
+const CompactDateSelector = ({ mode, date, onChange }) => {
+  const d = new Date(date + 'T00:00:00');
 
-  const dayStatusMap = useMemo(() => {
-    const map = {};
-    allData.forEach(row => {
-      const key = toDateKey(new Date(row.recorded_at));
-      const statuses = [
-        checkQuality('do',        row.dissolved_oxygen).status,
-        checkQuality('ph',        row.ph).status,
-        checkQuality('temp',      row.temperature).status,
-        checkQuality('turbidity', row.turbidity).status,
-      ];
-      const worst = statuses.includes('critical') ? 'bad'
-                  : statuses.includes('warning')  ? 'warn' : 'ok';
-      if (!map[key] || map[key] === 'ok') map[key] = worst;
-    });
-    return map;
-  }, [allData]);
-
-  const prevMonth = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y-1); }
-    else setViewMonth(m => m-1);
-  };
-  const nextMonth = () => {
-    const now = new Date();
-    if (viewYear > now.getFullYear() || (viewYear === now.getFullYear() && viewMonth >= now.getMonth())) return;
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y+1); }
-    else setViewMonth(m => m+1);
+  const shiftDate = (amount) => {
+    const nd = new Date(d);
+    if (mode === 'day') nd.setDate(nd.getDate() + amount);
+    if (mode === 'week') nd.setDate(nd.getDate() + (amount * 7));
+    if (mode === 'month') nd.setMonth(nd.getMonth() + amount);
+    onChange(toDateKey(nd));
   };
 
-  const firstDay    = new Date(viewYear, viewMonth, 1).getDay();
-  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
-  const todayStr    = todayKey();
-  const cantNext    = viewYear > today.getFullYear() ||
-    (viewYear === today.getFullYear() && viewMonth >= today.getMonth());
-
-  const cells = [];
-  for (let i = 0; i < firstDay; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) {
-    const key = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    cells.push({ d, key, isFuture: key > todayStr, status: dayStatusMap[key] });
+  let label = '';
+  if (mode === 'day') label = `${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
+  if (mode === 'week') {
+    const sd = new Date(d); sd.setDate(sd.getDate() - 6);
+    label = `${sd.getDate()} - ${d.getDate()} ${THAI_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
   }
+  if (mode === 'month') label = `${THAI_MONTHS[d.getMonth()]} ${d.getFullYear()+543}`;
+
+  const inputType = mode === 'month' ? 'month' : 'date';
+  const val = mode === 'month' ? date.substring(0,7) : date;
 
   return (
-    <div className="wq-cal-box">
-      <div className="wq-cal-nav">
-        <button className="wq-cal-arrow" onClick={prevMonth}><ChevronLeft size={16}/></button>
-        <span className="wq-cal-month">{THAI_MONTHS[viewMonth]} {viewYear + 543}</span>
-        <button className="wq-cal-arrow" onClick={nextMonth}
-          style={{ opacity: cantNext ? 0.35:1, cursor: cantNext ? 'default':'pointer' }}>
-          <ChevronRight size={16}/>
-        </button>
+    <div style={{ 
+      display:'flex', alignItems:'center', justifyContent:'space-between', 
+      background:'#fff', padding:'10px 16px', borderRadius:'16px', 
+      boxShadow:'0 2px 10px rgba(0,0,0,0.03)', border:'1px solid #f1f5f9', margin:'12px 0' 
+    }}>
+      <button onClick={()=>shiftDate(-1)} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding:'4px' }}>
+        <ChevronLeft size={20}/>
+      </button>
+      
+      <div style={{ position:'relative', display:'flex', alignItems:'center', gap:'8px', fontWeight:'700', color:'#1e293b', fontSize:'15px' }}>
+        <CalendarDays size={18} color="#0d9488"/>
+        {label}
+        <input 
+          type={inputType} 
+          value={val}
+          onChange={(e) => {
+            if(e.target.value) {
+              onChange(mode === 'month' ? e.target.value + '-01' : e.target.value);
+            }
+          }}
+          style={{ position:'absolute', top:0, left:0, width:'100%', height:'100%', opacity:0, cursor:'pointer' }}
+        />
       </div>
 
-      <div className="wq-cal-weekdays">
-        {WEEKDAYS.map(w => <div key={w} className="wq-cal-wday">{w}</div>)}
-      </div>
-
-      <div className="wq-cal-grid">
-        {cells.map((cell, i) => {
-          if (!cell) return <div key={`e-${i}`} className="wq-cal-day empty"/>;
-          const cls = [
-            'wq-cal-day',
-            cell.isFuture ? 'future' : '',
-            cell.key === todayStr && !cell.isFuture ? 'today' : '',
-            cell.key === selectedDate ? 'selected' : '',
-            !cell.isFuture && cell.status ? `has-${cell.status}` : '',
-          ].filter(Boolean).join(' ');
-          return (
-            <div key={cell.key} className={cls}
-              onClick={() => !cell.isFuture && onSelectDate(cell.key)}>
-              <span className="dn">{cell.d}</span>
-              {!cell.isFuture && cell.status && <span className="ddot"/>}
-            </div>
-          );
-        })}
-      </div>
-
-      <div style={{ display:'flex', gap:14, marginTop:14, paddingTop:12, borderTop:'1px solid var(--border-soft)', flexWrap:'wrap' }}>
-        {[['#22c55e','ปกติ'],['#f59e0b','ควรระวัง'],['#f43f5e','อันตราย']].map(([c,l]) => (
-          <div key={l} style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>
-            <span style={{ width:8, height:8, borderRadius:'50%', background:c, display:'inline-block' }}/>
-            {l}
-          </div>
-        ))}
-      </div>
+      <button onClick={()=>shiftDate(1)} style={{ background:'none', border:'none', cursor:'pointer', color:'#94a3b8', padding:'4px' }}>
+        <ChevronRight size={20}/>
+      </button>
     </div>
   );
 };
 
-// ─── Table body (shared between both modes) ───────────────────────────────────
+// ─── Table body ───────────────────────────────────────────────────────────────
 const TableRows = ({ rows, showDate }) => rows.map((row, i) => {
   const qPH   = checkQuality('ph',        row.ph);
   const qDO   = checkQuality('do',        row.dissolved_oxygen);
@@ -183,8 +178,8 @@ const TableRows = ({ rows, showDate }) => rows.map((row, i) => {
   const dt = new Date(row.recorded_at);
   return (
     <tr key={i}>
-      <td style={{ color:'var(--text-muted)', fontSize:12, whiteSpace:'nowrap' }}>
-        {showDate && <span style={{ marginRight:4 }}>
+      <td style={{ color:'#64748b', fontSize:'12px', whiteSpace:'nowrap' }}>
+        {showDate && <span style={{ marginRight:'6px', fontWeight:600 }}>
           {dt.toLocaleDateString('th-TH', { day:'numeric', month:'short' })}
         </span>}
         {dt.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' })}
@@ -195,12 +190,12 @@ const TableRows = ({ rows, showDate }) => rows.map((row, i) => {
       <td style={gs(qTurb)}>{row.turbidity ?? '—'}</td>
       <td>
         {alerts.length > 0 ? (
-          <div style={{ display:'flex', flexWrap:'wrap', gap:2 }}>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:'4px' }}>
             {alerts.map((a,j) => <span key={j} className={`wq-alert-chip wq-chip-${a.cls}`}>{a.msg}</span>)}
           </div>
         ) : (
-          <span className="wq-alert-chip wq-chip-ok" style={{ display:'inline-flex', alignItems:'center', gap:3 }}>
-            <CheckCircle size={10}/> ปกติ
+          <span className="wq-alert-chip wq-chip-ok" style={{ display:'inline-flex', alignItems:'center', gap:'3px', background:'#ecfdf5', color:'#059669', padding:'4px 8px', borderRadius:'6px' }}>
+            <CheckCircle size={12}/> ปกติ
           </span>
         )}
       </td>
@@ -208,7 +203,7 @@ const TableRows = ({ rows, showDate }) => rows.map((row, i) => {
   );
 });
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 const WaterQuality = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -261,32 +256,24 @@ const WaterQuality = () => {
   // ── Active dataset depends on mode ──
   const activeData = useMemo(() => {
     if (rangeMode === 'all') return allData;
-    
     if (rangeMode === 'day') {
       return allData.filter(row => toDateKey(new Date(row.recorded_at)) === selDate);
     }
-    
     if (rangeMode === 'week') {
-      // ดึงข้อมูล 7 วัน (รวมวันที่เลือกเป็นวันสุดท้าย)
       const endObj = new Date(selDate + 'T00:00:00');
       const startObj = new Date(selDate + 'T00:00:00');
       startObj.setDate(startObj.getDate() - 6);
-      
       const endStr = toDateKey(endObj);
       const startStr = toDateKey(startObj);
-      
       return allData.filter(row => {
         const dStr = toDateKey(new Date(row.recorded_at));
         return dStr >= startStr && dStr <= endStr;
       });
     }
-
     if (rangeMode === 'month') {
-      // ดึงข้อมูลเฉพาะเดือนและปีที่ตรงกับวันที่เลือก (YYYY-MM)
       const prefix = selDate.substring(0, 7); 
       return allData.filter(row => toDateKey(new Date(row.recorded_at)).startsWith(prefix));
     }
-    
     return allData;
   }, [allData, rangeMode, selDate]);
 
@@ -294,14 +281,9 @@ const WaterQuality = () => {
 
   const chartData = useMemo(() => [...activeData].reverse().map(row => {
     const d = new Date(row.recorded_at);
-    let timeStr = '';
-    // แสดงเวลาอย่างเดียวถ้ารายวัน แต่ถ้าดูหลายวันให้แสดงวันที่ด้วย
-    if (rangeMode === 'day') {
-      timeStr = d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
-    } else {
-      timeStr = d.toLocaleDateString('th-TH', { day:'numeric', month:'short' }) + ' ' + 
-                d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
-    }
+    let timeStr = rangeMode === 'day' 
+      ? d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' })
+      : d.toLocaleDateString('th-TH', { day:'numeric', month:'short' }) + ' ' + d.toLocaleTimeString('th-TH', { hour:'2-digit', minute:'2-digit' });
     
     return {
       time: timeStr,
@@ -321,24 +303,18 @@ const WaterQuality = () => {
     setCurPage(1);
   }, []);
 
-  const handleDateSelect = useCallback(key => {
-    setSelDate(key);
-    setCurPage(1);
-  }, []);
-
-  // สร้างคำอธิบายหัวข้ออิงตาม Range
   let sectionLabel = '';
   if (rangeMode === 'all') {
-    sectionLabel = `ค่าล่าสุด — ข้อมูลทั้งหมด (${allData.length} รายการ)`;
+    sectionLabel = `ข้อมูลทั้งหมด (${allData.length} รายการ)`;
   } else if (rangeMode === 'day') {
-    sectionLabel = `ค่าล่าสุด — ${fmtDate(selDate)}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
+    sectionLabel = `ข้อมูลวันที่ ${fmtDate(selDate)}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
   } else if (rangeMode === 'week') {
     const startObj = new Date(selDate + 'T00:00:00');
     startObj.setDate(startObj.getDate() - 6);
-    sectionLabel = `ค่าล่าสุด — ${fmtDate(toDateKey(startObj))} ถึง ${fmtDate(selDate)}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
+    sectionLabel = `ข้อมูลตั้งแต่วันที่ ${fmtDate(toDateKey(startObj))} ถึง ${fmtDate(selDate)}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
   } else if (rangeMode === 'month') {
     const [y, m] = selDate.split('-');
-    sectionLabel = `ค่าล่าสุด — ประจำเดือน ${THAI_MONTHS[parseInt(m)-1]} ${parseInt(y)+543}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
+    sectionLabel = `ข้อมูลประจำเดือน ${THAI_MONTHS[parseInt(m)-1]} ${parseInt(y)+543}${activeData.length === 0 ? ' (ไม่มีข้อมูล)' : ''}`;
   }
 
   return (
@@ -353,13 +329,12 @@ const WaterQuality = () => {
           <span className="wq-page-title">ประวัติคุณภาพน้ำ</span>
         </div>
         {devices.length > 0 && (
-          <div className="wq-device-pill">
+          <div className="wq-device-pill" style={{ background:'rgba(255,255,255,0.15)', backdropFilter:'blur(10px)' }}>
             <span className="wq-device-dot"/>
-            <select className="wq-device-select" value={deviceId||''}
-              onChange={e => setSearchParams({ deviceId: e.target.value })}>
+            <select className="wq-device-select" value={deviceId||''} onChange={e => setSearchParams({ deviceId: e.target.value })}>
               {devices.map(d => <option key={d.device_id} value={d.device_id}>{d.device_name}</option>)}
             </select>
-            <ChevronDown size={13} style={{ color:'rgba(255,255,255,0.5)', flexShrink:0 }}/>
+            <ChevronDown size={13} style={{ color:'rgba(255,255,255,0.8)' }}/>
           </div>
         )}
       </header>
@@ -371,51 +346,51 @@ const WaterQuality = () => {
         <AnimatePresence>
           {error && (
             <motion.div className="wq-error" initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}>
-              <AlertTriangle size={16} style={{ flexShrink:0 }}/> {error}
+              <AlertTriangle size={16}/> {error}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* ── Range toggle ── */}
-        <div className="wq-section-label">โหมดการดูข้อมูล</div>
-        <div className="wq-range-toggle" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          <button className={`wq-range-btn${rangeMode === 'day' ? ' active' : ''}`} onClick={() => handleRangeChange('day')}>
-            <CalendarDays size={15}/> รายวัน
-          </button>
-          <button className={`wq-range-btn${rangeMode === 'week' ? ' active' : ''}`} onClick={() => handleRangeChange('week')}>
-            <CalendarDays size={15}/> 7 วันย้อนหลัง
-          </button>
-          <button className={`wq-range-btn${rangeMode === 'month' ? ' active' : ''}`} onClick={() => handleRangeChange('month')}>
-            <CalendarDays size={15}/> รายเดือน
-          </button>
-          <button className={`wq-range-btn${rangeMode === 'all' ? ' active' : ''}`} onClick={() => handleRangeChange('all')}>
-            <Layers size={15}/> ทั้งหมด
-          </button>
+        {/* ── Segmented Control (ปุ่มเลือกโหมดดีไซน์ใหม่) ── */}
+        <div style={{ 
+          display: 'flex', background: '#f8fafc', padding: '6px', 
+          borderRadius: '16px', gap: '4px', overflowX: 'auto', marginBottom: '16px',
+          border: '1px solid #e2e8f0'
+        }}>
+          {[
+            { id: 'day', label: 'รายวัน' },
+            { id: 'week', label: '7 วัน' },
+            { id: 'month', label: 'รายเดือน' },
+            { id: 'all', label: 'ทั้งหมด' }
+          ].map(m => (
+            <button key={m.id} onClick={() => handleRangeChange(m.id)}
+              style={{ 
+                flex: '1 1 auto', padding: '10px 16px', borderRadius: '12px', border: 'none',
+                background: rangeMode === m.id ? '#ffffff' : 'transparent',
+                boxShadow: rangeMode === m.id ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+                color: rangeMode === m.id ? '#0f172a' : '#64748b',
+                fontWeight: rangeMode === m.id ? '700' : '600',
+                cursor: 'pointer', whiteSpace:'nowrap', transition: 'all 0.2s'
+              }}>
+              {m.label}
+            </button>
+          ))}
         </div>
 
-        {/* ── Calendar (ซ่อนเมื่อเลือกเป็น All) ── */}
+        {/* ── Compact Date Selector ── */}
         <AnimatePresence>
           {rangeMode !== 'all' && (
             <motion.div
-              key="calendar"
-              initial={{ opacity:0, height:0, marginBottom:0 }}
-              animate={{ opacity:1, height:'auto', marginBottom:0 }}
-              exit={{ opacity:0, height:0, marginBottom:0 }}
-              transition={{ duration:0.25 }}
-              style={{ overflow:'hidden' }}
+              initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }}
             >
-              <div className="wq-section-label" style={{ marginTop:24 }}>
-                {rangeMode === 'day' ? 'เลือกวันที่' : 
-                 rangeMode === 'week' ? 'เลือกวันสิ้นสุด (ดูย้อนหลัง 7 วัน)' : 'เลือกเดือน'}
-              </div>
-              <Calendar allData={allData} selectedDate={selDate} onSelectDate={handleDateSelect}/>
+              <CompactDateSelector mode={rangeMode} date={selDate} onChange={setSelDate} />
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* ── Stat cards ── */}
         <div className="wq-section-label" style={{ marginTop:24 }}>{sectionLabel}</div>
-        <div className="wq-stats-grid">
+        <div className="wq-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
           <StatCard icon={Droplets}    label="pH"       value={latest.ph}               unit=""     type="ph"        />
           <StatCard icon={Wind}        label="DO"       value={latest.dissolved_oxygen} unit="mg/L" type="do"        />
           <StatCard icon={Thermometer} label="อุณหภูมิ" value={latest.temperature}      unit="°C"   type="temp"      />
@@ -423,53 +398,67 @@ const WaterQuality = () => {
         </div>
 
         {/* ── Analysis ── */}
-        <div className="wq-section-label">วิเคราะห์ข้อมูล</div>
-        <div className="wq-analysis">
+        <div className="wq-section-label" style={{ marginTop:32 }}>วิเคราะห์ข้อมูล</div>
+        <div className="wq-analysis" style={{ background:'#fff', padding:'20px', borderRadius:'24px', boxShadow:'0 4px 20px rgba(0,0,0,0.02)', border:'1px solid #f1f5f9' }}>
 
-          <div className="wq-tabs">
-            <button className={`wq-tab${viewMode==='chart' ? ' active':''}`} onClick={() => setViewMode('chart')}>
+          <div className="wq-tabs" style={{ background:'#f8fafc', padding:'4px', borderRadius:'12px', display:'inline-flex', marginBottom:'20px' }}>
+            <button className={`wq-tab${viewMode==='chart' ? ' active':''}`} onClick={() => setViewMode('chart')}
+              style={{ background: viewMode==='chart'?'#fff':'transparent', boxShadow: viewMode==='chart'?'0 2px 6px rgba(0,0,0,0.05)':'none' }}>
               <BarChart2 size={15}/> กราฟ
             </button>
-            <button className={`wq-tab${viewMode==='table' ? ' active':''}`} onClick={() => setViewMode('table')}>
+            <button className={`wq-tab${viewMode==='table' ? ' active':''}`} onClick={() => setViewMode('table')}
+              style={{ background: viewMode==='table'?'#fff':'transparent', boxShadow: viewMode==='table'?'0 2px 6px rgba(0,0,0,0.05)':'none' }}>
               <List size={15}/> ตาราง
             </button>
           </div>
 
           {activeData.length === 0 ? (
-            <div className="wq-empty">
-              <span className="wq-empty-icon">📭</span>
+            <div className="wq-empty" style={{ padding:'40px 0', color:'#94a3b8' }}>
+              <span className="wq-empty-icon" style={{ fontSize:'40px', marginBottom:'12px' }}>📭</span>
               {rangeMode === 'all' ? 'ไม่มีข้อมูลในระบบ' : 'ไม่มีข้อมูลในช่วงเวลาที่เลือก'}
             </div>
           ) : viewMode === 'chart' ? (
             <div>
-              <div className="wq-param-bar">
-                <select className="wq-param-select" value={selParam} onChange={e => setSelParam(e.target.value)}>
+              <div className="wq-param-bar" style={{ marginBottom:'20px' }}>
+                <select className="wq-param-select" value={selParam} onChange={e => setSelParam(e.target.value)}
+                  style={{ background:'#f1f5f9', border:'none', padding:'10px 16px', borderRadius:'12px', fontWeight:600, color:'#334155', outline:'none' }}>
                   {PARAMS.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
                 </select>
               </div>
-              <div className="wq-chart-wrap">
+              <div className="wq-chart-wrap" style={{ height:'300px' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top:4, right:4, left:-20, bottom:0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e6f7f5"/>
+                  <AreaChart data={chartData} margin={{ top:10, right:10, left:-20, bottom:0 }}>
+                    <defs>
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={activeParam.color} stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor={activeParam.color} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9"/>
                     <XAxis dataKey="time" axisLine={false} tickLine={false}
-                      tick={{ fill:'#6b8fa3', fontSize:10 }} dy={6}
+                      tick={{ fill:'#94a3b8', fontSize:11, fontWeight:600 }} dy={10}
                       interval={rangeMode==='all' ? Math.floor(chartData.length/6) : 'preserveStartEnd'}/>
-                    <YAxis axisLine={false} tickLine={false} tick={{ fill:'#6b8fa3', fontSize:11 }}/>
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill:'#94a3b8', fontSize:11, fontWeight:600 }}/>
                     <Tooltip content={<ChartTooltip/>}/>
-                    <Line type="monotone" dataKey={selParam} stroke={activeParam.color}
-                      strokeWidth={2.5} dot={false} name={activeParam.label}
-                      activeDot={{ r:5, fill:activeParam.color }}/>
-                  </LineChart>
+                    <Area type="monotone" dataKey={selParam} stroke={activeParam.color} fill="url(#colorValue)"
+                      strokeWidth={3} dot={false} name={activeParam.label}
+                      activeDot={{ r:6, fill:activeParam.color, stroke:'#fff', strokeWidth:3 }}/>
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
           ) : (
             <div>
-              <div className="wq-table-wrap">
-                <table className="wq-table">
-                  <thead>
+              <div className="wq-table-wrap" style={{ borderRadius:'12px', overflow:'hidden', border:'1px solid #e2e8f0' }}>
+                <table className="wq-table" style={{ width:'100%', borderCollapse:'collapse', textAlign:'left' }}>
+                  <thead style={{ background:'#f8fafc' }}>
                     <tr>
-                      <th>เวลา</th><th>pH</th><th>DO</th><th>Temp</th><th>Turb</th><th>สถานะ</th>
+                      <th style={{ padding:'12px', color:'#475569', fontWeight:700, fontSize:'13px' }}>เวลา</th>
+                      <th style={{ padding:'12px', color:'#475569', fontWeight:700, fontSize:'13px' }}>pH</th>
+                      <th style={{ padding:'12px', color:'#475569', fontWeight:700, fontSize:'13px' }}>DO</th>
+                      <th style={{ padding:'12px', color:'#475569', fontWeight:700, fontSize:'13px' }}>Temp</th>
+                      <th style={{ padding:'12px', color:'#475569', fontWeight:700, fontSize:'13px' }}>Turb</th>
+                      <th style={{ padding:'12px', color:'#475569', fontWeight:700, fontSize:'13px' }}>สถานะ</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -478,16 +467,18 @@ const WaterQuality = () => {
                 </table>
               </div>
               {totalPages > 1 && (
-                <div className="wq-pagination">
-                  <span className="wq-page-info">
+                <div className="wq-pagination" style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:'16px' }}>
+                  <span className="wq-page-info" style={{ color:'#64748b', fontSize:'13px', fontWeight:600 }}>
                     หน้า {curPage} / {totalPages} ({activeData.length} รายการ)
                   </span>
-                  <div className="wq-page-btns">
-                    <button className="wq-page-btn" disabled={curPage===1} onClick={() => setCurPage(p => p-1)}>
-                      <ChevronLeft size={15}/>
+                  <div className="wq-page-btns" style={{ display:'flex', gap:'8px' }}>
+                    <button className="wq-page-btn" disabled={curPage===1} onClick={() => setCurPage(p => p-1)}
+                      style={{ padding:'8px', borderRadius:'8px', border:'1px solid #e2e8f0', background:'#fff', cursor: curPage===1?'not-allowed':'pointer', color: curPage===1?'#cbd5e1':'#0f172a' }}>
+                      <ChevronLeft size={18}/>
                     </button>
-                    <button className="wq-page-btn" disabled={curPage===totalPages} onClick={() => setCurPage(p => p+1)}>
-                      <ChevronRight size={15}/>
+                    <button className="wq-page-btn" disabled={curPage===totalPages} onClick={() => setCurPage(p => p+1)}
+                      style={{ padding:'8px', borderRadius:'8px', border:'1px solid #e2e8f0', background:'#fff', cursor: curPage===totalPages?'not-allowed':'pointer', color: curPage===totalPages?'#cbd5e1':'#0f172a' }}>
+                      <ChevronRight size={18}/>
                     </button>
                   </div>
                 </div>
