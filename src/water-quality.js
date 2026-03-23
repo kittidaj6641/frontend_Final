@@ -10,7 +10,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import {
   ArrowLeft, Droplets, Wind, Thermometer, Zap,
   ChevronDown, ChevronLeft, ChevronRight, AlertTriangle,
-  CheckCircle, BarChart2, List, CalendarDays, Layers, Clock
+  CheckCircle, BarChart2, List, CalendarDays, Clock
 } from 'lucide-react';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
