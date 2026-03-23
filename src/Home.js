@@ -1,4 +1,4 @@
-// src/Home.js — SmartFarm AI Dashboard (Redesigned)
+// src/Home.js — SmartFarm AI Dashboard (Redesigned & Compact)
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -14,20 +14,20 @@ import {
 
 import config from './config';
 import WaterGauge from './WaterGauge';
-import './Home.css';
+import './Home.css'; // นำเข้า CSS ที่แยกไว้
 
 /* ─── Custom Tooltip for Chart ───────── */
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div style={{
-        background: '#fff', border: '1px solid #d1faf4',
-        borderRadius: 12, padding: '10px 14px',
-        boxShadow: '0 4px 20px rgba(13,155,136,0.12)',
-        fontSize: 13, fontWeight: 600
+        background: '#ffffff', border: '1px solid #e2e8f0',
+        borderRadius: '12px', padding: '12px 16px',
+        boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+        fontSize: '13px', fontWeight: 600
       }}>
-        <div style={{ color: '#6b8fa3', marginBottom: 2 }}>{label}</div>
-        <div style={{ color: '#0d1b2a', fontSize: 18 }}>{payload[0].value}</div>
+        <div style={{ color: '#64748b', marginBottom: '4px' }}>{label}</div>
+        <div style={{ color: '#0f172a', fontSize: '18px', fontWeight: 800 }}>{payload[0].value}</div>
       </div>
     );
   }
@@ -112,9 +112,9 @@ const Home = () => {
 
   const chartData = hasData ? [
     { name: 'pH',       value: Number(latest.ph)                 || 0, color: '#0d9488' },
-    { name: 'DO',       value: Number(latest.dissolved_oxygen)    || 0, color: '#38bdf8' },
-    { name: 'Temp °C',  value: Number(latest.temperature)         || 0, color: '#f59e0b' },
-    { name: 'Turbidity',value: Number(latest.turbidity)           || 0, color: '#a78bfa' },
+    { name: 'DO',       value: Number(latest.dissolved_oxygen)   || 0, color: '#38bdf8' },
+    { name: 'Temp °C',  value: Number(latest.temperature)        || 0, color: '#f59e0b' },
+    { name: 'Turbidity',value: Number(latest.turbidity)          || 0, color: '#a78bfa' },
   ] : [];
 
   return (
@@ -124,7 +124,7 @@ const Home = () => {
       <header className="header">
         <div className="brand-logo">
           <div className="logo-icon">
-            <Fish size={18} color="#fff" />
+            <Fish size={18} color="#fff" strokeWidth={2.5} />
           </div>
           <span className="brand-name">Smart<span className="brand-accent">Farm</span></span>
         </div>
@@ -141,15 +141,15 @@ const Home = () => {
         </nav>
       </header>
 
-      {/* ── Hero Strip ── */}
+      {/* ── Hero Strip (Compact & Redesigned) ── */}
       <div className="hero-strip">
-        <div className="hero-text">
-          <h1>ภาพรวมบ่อเลี้ยง 🌊</h1>
-          <p>ติดตามคุณภาพน้ำแบบ Real-time เพื่อผลผลิตที่ดีที่สุด</p>
-        </div>
+        <div className="hero-content">
+          <div className="hero-text">
+            <h1>ภาพรวมบ่อเลี้ยง 🌊</h1>
+            <p>ติดตามคุณภาพน้ำแบบ Real-time เพื่อผลผลิตที่ดีที่สุด</p>
+          </div>
 
-        {!loadingDevices && devices.length > 0 && (
-          <div className="device-bar">
+          {!loadingDevices && devices.length > 0 && (
             <div className="device-select-wrapper">
               <span className="device-dot" />
               <select
@@ -161,10 +161,10 @@ const Home = () => {
                   <option key={d.device_id} value={d.device_id}>{d.device_name}</option>
                 ))}
               </select>
-              <ChevronDown size={15} className="device-chevron" />
+              <ChevronDown size={16} className="device-chevron" />
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Main Body ── */}
@@ -185,7 +185,7 @@ const Home = () => {
           )}
         </AnimatePresence>
 
-        {/* ── Sensor Gauges (merged) ── */}
+        {/* ── Sensor Gauges ── */}
         <div className="section-label">คุณภาพน้ำล่าสุด</div>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -212,20 +212,20 @@ const Home = () => {
             <BarChart2 size={18} color="var(--teal)" />
             เปรียบเทียบค่าปัจจัยน้ำล่าสุด
           </div>
-          <div style={{ width: '100%', height: 200 }}>
+          <div style={{ width: '100%', height: 220 }}>
             {hasData ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e6f7f5" />
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -24, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis
                     dataKey="name"
                     axisLine={false} tickLine={false}
-                    tick={{ fill: '#6b8fa3', fontSize: 12 }}
-                    dy={8}
+                    tick={{ fill: '#64748b', fontSize: 12, fontFamily: 'var(--font-body)', fontWeight: 500 }}
+                    dy={12}
                   />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6b8fa3', fontSize: 11 }} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f0faf8' }} />
-                  <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={48}>
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+                  <Bar dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={50}>
                     {chartData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />
                     ))}
@@ -250,7 +250,7 @@ const Home = () => {
             className="menu-btn btn-primary full-width"
             onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}
           >
-            <div className="btn-icon"><Activity size={18} /></div>
+            <div className="btn-icon"><Activity size={20} /></div>
             ดูกราฟ Real-time
           </button>
 
@@ -258,7 +258,7 @@ const Home = () => {
             className="menu-btn btn-sky"
             onClick={() => navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality')}
           >
-            <div className="btn-icon"><BarChart2 size={18} /></div>
+            <div className="btn-icon"><BarChart2 size={20} /></div>
             ประวัติย้อนหลัง
           </button>
 
@@ -266,7 +266,7 @@ const Home = () => {
             className="menu-btn btn-outline"
             onClick={() => navigate('/add-device')}
           >
-            <div className="btn-icon"><PlusCircle size={18} /></div>
+            <div className="btn-icon"><PlusCircle size={20} /></div>
             ลงทะเบียนเซนเซอร์
           </button>
 
@@ -274,7 +274,7 @@ const Home = () => {
             className="menu-btn btn-amber full-width"
             onClick={() => navigate('/shrimp-info')}
           >
-            <div className="btn-icon"><BookOpen size={18} /></div>
+            <div className="btn-icon"><BookOpen size={20} /></div>
             คู่มือการดูแลน้ำ
           </button>
         </motion.div>
