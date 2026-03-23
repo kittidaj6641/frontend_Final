@@ -300,9 +300,9 @@ const Home = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.22 }}
         >
-          {/* [แก้ไข] เอาคลาส full-width ออก และแก้ข้อความเป็น ดูค่าเรียลไทม์ */}
+          {/* ใส่คลาส full-width คืนให้ทุกปุ่ม เพื่อให้ขยายยาวเต็มจอ */}
           <button
-            className="menu-btn btn-primary"
+            className="menu-btn btn-primary full-width"
             onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}
             disabled={!selectedDeviceId}
           >
@@ -311,7 +311,7 @@ const Home = () => {
           </button>
 
           <button
-            className="menu-btn btn-sky"
+            className="menu-btn btn-sky full-width"
             onClick={() => navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality')}
             disabled={!selectedDeviceId}
           >
@@ -320,16 +320,15 @@ const Home = () => {
           </button>
 
           <button
-            className="menu-btn btn-outline"
+            className="menu-btn btn-outline full-width"
             onClick={() => navigate('/add-device')}
           >
             <div className="btn-icon"><PlusCircle size={20} /></div>
             ลงทะเบียนเซนเซอร์
           </button>
 
-          {/* [แก้ไข] เอาคลาส full-width ออก */}
           <button
-            className="menu-btn btn-amber"
+            className="menu-btn btn-amber full-width"
             onClick={() => navigate('/shrimp-info')}
           >
             <div className="btn-icon"><BookOpen size={20} /></div>
