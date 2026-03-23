@@ -1,4 +1,4 @@
-// src/Home.js — SmartFarm AI Dashboard (Redesigned)
+// src/Home.js — SmartFarm AI Dashboard
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -37,7 +37,6 @@ const CustomTooltip = ({ active, payload, label }) => {
 /* ─── Main Component ─────────────────── */
 const Home = () => {
   const navigate = useNavigate();
-  // เพิ่ม isConfirm และ onConfirm ลงใน State ของ Modal
   const [modal, setModal]     = useState({ isOpen: false, title: '', content: '', isConfirm: false, onConfirm: null });
   const [waterData, setWaterData] = useState([]);
   const [error, setError]     = useState('');
@@ -109,7 +108,7 @@ const Home = () => {
   };
 
   /* Delete Device Logic */
-const confirmDeleteDevice = () => {
+  const confirmDeleteDevice = () => {
     const deviceName = devices.find(d => d.device_id === selectedDeviceId)?.device_name || 'อุปกรณ์นี้';
     setModal({
       isOpen: true,
@@ -123,12 +122,10 @@ const confirmDeleteDevice = () => {
   const executeDeleteDevice = async () => {
     const token = localStorage.getItem('token');
     try {
-      // ทำการลบอุปกรณ์ผ่าน API (หาก API ของคุณใช้ Path อื่น ให้แก้ตรงนี้นะครับ)
       await axios.delete(`${config.API_BASE_URL}/member/devices/${selectedDeviceId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // อัปเดตรายการอุปกรณ์บนหน้าจอ
       const updatedDevices = devices.filter(d => d.device_id !== selectedDeviceId);
       setDevices(updatedDevices);
       
@@ -136,10 +133,9 @@ const confirmDeleteDevice = () => {
         setSelectedDeviceId(updatedDevices[0].device_id);
       } else {
         setSelectedDeviceId('');
-        setWaterData([]); // เคลียร์ข้อมูลหน้าจอถ้าไม่มีอุปกรณ์เหลือ
+        setWaterData([]); 
       }
       
-      // แจ้งเตือนสำเร็จ
       setModal({ isOpen: false, title: '', content: '' }); 
     } catch (err) {
       setModal({
@@ -304,13 +300,14 @@ const confirmDeleteDevice = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.22 }}
         >
+          {/* [แก้ไข] เอาคลาส full-width ออก และแก้ข้อความเป็น ดูค่าเรียลไทม์ */}
           <button
-            className="menu-btn btn-primary full-width"
+            className="menu-btn btn-primary"
             onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}
             disabled={!selectedDeviceId}
           >
             <div className="btn-icon"><Activity size={20} /></div>
-            ดูกราฟ Real-time
+            ดูค่าเรียลไทม์
           </button>
 
           <button
@@ -330,8 +327,9 @@ const confirmDeleteDevice = () => {
             ลงทะเบียนเซนเซอร์
           </button>
 
+          {/* [แก้ไข] เอาคลาส full-width ออก */}
           <button
-            className="menu-btn btn-amber full-width"
+            className="menu-btn btn-amber"
             onClick={() => navigate('/shrimp-info')}
           >
             <div className="btn-icon"><BookOpen size={20} /></div>
