@@ -29,15 +29,11 @@ function AddDevice() {
     }
   }, [navigate]);
 
-  // [ปรับแก้] ใช้ prev state เพื่อให้รับค่าการพิมพ์ได้อย่างต่อเนื่องและไม่กระตุก
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // ล้าง Error เมื่อเริ่มพิมพ์ใหม่
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
     if (error) setError('');
     if (success) setSuccess('');
   };
@@ -115,7 +111,7 @@ function AddDevice() {
       >
         {/* ส่วนหัวของฟอร์ม */}
         <header className="form-header-nav">
-          <button onClick={() => navigate('/')} className="back-btn" type="button">
+          <button onClick={() => navigate('/')} className="back-btn">
             <ArrowLeft size={20} /> ย้อนกลับ
           </button>
           <h2>ลงทะเบียนอุปกรณ์</h2>
@@ -168,7 +164,6 @@ function AddDevice() {
                 value={formData.deviceName}
                 onChange={handleChange}
                 disabled={loading}
-                autoComplete="off"
               />
             </div>
 
@@ -184,7 +179,6 @@ function AddDevice() {
                 value={formData.deviceId}
                 onChange={handleChange}
                 disabled={loading}
-                autoComplete="off"
               />
               <small className="input-hint">
                 ต้องตรงกับ ID ที่ระบุใน Code ของบอร์ด ESP32
@@ -193,29 +187,23 @@ function AddDevice() {
 
             <div className="form-group">
               <label>สถานที่ติดตั้ง (Location)</label>
-              <div className="input-with-icon" style={{ position: 'relative' }}>
-                {/* [แก้ไข] ลดโอกาสที่ Icon จะบัง Input */}
-                <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-                  <MapPin size={18} className="field-icon" color="#94a3b8" />
-                </div>
-                
+              <div className="input-with-icon">
+                <MapPin size={18} className="field-icon" />
                 <input 
                   type="text" 
                   name="location" 
                   className="form-input pl-10"
-                  style={{ paddingLeft: '36px' }}
                   placeholder="เช่น โซนเหนือ, บ่ออนุบาล" 
                   value={formData.location}
                   onChange={handleChange}
                   disabled={loading}
-                  autoComplete="off"
                 />
               </div>
             </div>
 
             <button type="submit" className="submit-btn" disabled={loading}>
               {loading ? (
-                <span className="loader">กำลังบันทึก...</span>
+                <span className="loader"></span>
               ) : (
                 <>
                   <Save size={20} /> บันทึกข้อมูล
