@@ -300,9 +300,9 @@ const Home = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.22 }}
         >
-          {/* ใส่คลาส full-width คืนให้ทุกปุ่ม เพื่อให้ขยายยาวเต็มจอ */}
+          {/* เอาคลาส full-width ออกทั้งหมด เพื่อให้ทุกปุ่มจัดเรียงแบบ 2x2 เท่ากัน */}
           <button
-            className="menu-btn btn-primary full-width"
+            className="menu-btn btn-primary"
             onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}
             disabled={!selectedDeviceId}
           >
@@ -311,7 +311,7 @@ const Home = () => {
           </button>
 
           <button
-            className="menu-btn btn-sky full-width"
+            className="menu-btn btn-sky"
             onClick={() => navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality')}
             disabled={!selectedDeviceId}
           >
@@ -320,7 +320,7 @@ const Home = () => {
           </button>
 
           <button
-            className="menu-btn btn-outline full-width"
+            className="menu-btn btn-outline"
             onClick={() => navigate('/add-device')}
           >
             <div className="btn-icon"><PlusCircle size={20} /></div>
@@ -328,7 +328,7 @@ const Home = () => {
           </button>
 
           <button
-            className="menu-btn btn-amber full-width"
+            className="menu-btn btn-amber"
             onClick={() => navigate('/shrimp-info')}
           >
             <div className="btn-icon"><BookOpen size={20} /></div>
