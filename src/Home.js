@@ -1,11 +1,11 @@
-// src/Home.js — SmartFarm AI Dashboard (Redesigned & Compact)
+// src/Home.js — SmartFarm AI Dashboard (Redesigned)
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut, Clock, Activity, PlusCircle,
-  ChevronDown, Fish, BarChart2, BookOpen, AlertTriangle, Info
+  ChevronDown, Fish, BarChart2, BookOpen, AlertTriangle, Info, Trash2
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -14,7 +14,7 @@ import {
 
 import config from './config';
 import WaterGauge from './WaterGauge';
-import './Home.css'; // นำเข้า CSS ที่แยกไว้
+import './Home.css';
 
 /* ─── Custom Tooltip for Chart ───────── */
 const CustomTooltip = ({ active, payload, label }) => {
@@ -37,7 +37,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 /* ─── Main Component ─────────────────── */
 const Home = () => {
   const navigate = useNavigate();
-  const [modal, setModal]     = useState({ isOpen: false, title: '', content: '' });
+  // เพิ่ม isConfirm และ onConfirm ลงใน State ของ Modal
+  const [modal, setModal]     = useState({ isOpen: false, title: '', content: '', isConfirm: false, onConfirm: null });
   const [waterData, setWaterData] = useState([]);
   const [error, setError]     = useState('');
   const [devices, setDevices] = useState([]);
@@ -93,6 +94,7 @@ const Home = () => {
     fetch();
   }, [selectedDeviceId]);
 
+  /* Logout Logic */
   const handleLogout = async () => {
     const token = localStorage.getItem('token');
     try {
@@ -106,6 +108,49 @@ const Home = () => {
     }
   };
 
+  /* Delete Device Logic */
+  const confirmDeleteDevice = () => {
+    const deviceName = devices.find(d => d.device_id === selectedDeviceId)?.device_name || 'อุปกรณ์นี้';
+    setModal({
+      isOpen: true,
+      title: 'ยืนยันการลบอุปกรณ์',
+      content: `คุณแน่ใจหรือไม่ว่าต้องการลบเซนเซอร์ "${deviceName}" ? ข้อมูลทั้งหมดที่เกี่ยวข้องจะถูกลบและไม่สามารถกู้คืนได้`,
+      isConfirm: true,
+      onConfirm: executeDeleteDevice
+    });
+  };
+
+  const executeDeleteDevice = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      // ทำการลบอุปกรณ์ผ่าน API (หาก API ของคุณใช้ Path อื่น ให้แก้ตรงนี้นะครับ)
+      await axios.delete(`${config.API_BASE_URL}/member/devices/${selectedDeviceId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // อัปเดตรายการอุปกรณ์บนหน้าจอ
+      const updatedDevices = devices.filter(d => d.device_id !== selectedDeviceId);
+      setDevices(updatedDevices);
+      
+      if (updatedDevices.length > 0) {
+        setSelectedDeviceId(updatedDevices[0].device_id);
+      } else {
+        setSelectedDeviceId('');
+        setWaterData([]); // เคลียร์ข้อมูลหน้าจอถ้าไม่มีอุปกรณ์เหลือ
+      }
+      
+      // แจ้งเตือนสำเร็จ
+      setModal({ isOpen: false, title: '', content: '' }); 
+    } catch (err) {
+      setModal({
+        isOpen: true,
+        title: 'เกิดข้อผิดพลาด',
+        content: 'ไม่สามารถลบอุปกรณ์ได้ในขณะนี้ โปรดลองใหม่อีกครั้ง',
+        isConfirm: false
+      });
+    }
+  };
+
   /* Data processing */
   const latest  = waterData[0] || {};
   const hasData = Boolean(latest.device_id);
@@ -116,6 +161,8 @@ const Home = () => {
     { name: 'Temp °C',  value: Number(latest.temperature)        || 0, color: '#f59e0b' },
     { name: 'Turbidity',value: Number(latest.turbidity)          || 0, color: '#a78bfa' },
   ] : [];
+
+  const handleCloseModal = () => setModal({ isOpen: false, title: '', content: '', isConfirm: false, onConfirm: null });
 
   return (
     <div className="home-page">
@@ -132,7 +179,7 @@ const Home = () => {
           <button className="nav-btn" title="ประวัติการเข้าสู่ระบบ" onClick={() => navigate('/login-logs')}>
             <Clock size={17} />
           </button>
-          <button className="nav-btn" title="เกี่ยวกับ" onClick={() => setModal({ isOpen: true, title: 'SmartFarm AI', content: 'ระบบจัดการและติดตามคุณภาพน้ำอัจฉริยะสำหรับการเพาะเลี้ยงสัตว์น้ำ เวอร์ชัน 1.0 — ออกแบบให้ใช้งานง่ายและแม่นยำสูงสุด' })}>
+          <button className="nav-btn" title="เกี่ยวกับ" onClick={() => setModal({ isOpen: true, title: 'SmartFarm AI', content: 'ระบบจัดการและติดตามคุณภาพน้ำอัจฉริยะสำหรับการเพาะเลี้ยงสัตว์น้ำ เวอร์ชัน 1.0 — ออกแบบให้ใช้งานง่ายและแม่นยำสูงสุด', isConfirm: false })}>
             <Info size={17} />
           </button>
           <button className="nav-btn danger" title="ออกจากระบบ" onClick={handleLogout}>
@@ -141,7 +188,7 @@ const Home = () => {
         </nav>
       </header>
 
-      {/* ── Hero Strip (Compact & Redesigned) ── */}
+      {/* ── Hero Strip (Compact) ── */}
       <div className="hero-strip">
         <div className="hero-content">
           <div className="hero-text">
@@ -150,18 +197,29 @@ const Home = () => {
           </div>
 
           {!loadingDevices && devices.length > 0 && (
-            <div className="device-select-wrapper">
-              <span className="device-dot" />
-              <select
-                className="device-select"
-                value={selectedDeviceId}
-                onChange={e => setSelectedDeviceId(e.target.value)}
+            <div className="device-actions">
+              <div className="device-select-wrapper">
+                <span className="device-dot" />
+                <select
+                  className="device-select"
+                  value={selectedDeviceId}
+                  onChange={e => setSelectedDeviceId(e.target.value)}
+                >
+                  {devices.map(d => (
+                    <option key={d.device_id} value={d.device_id}>{d.device_name}</option>
+                  ))}
+                </select>
+                <ChevronDown size={16} className="device-chevron" />
+              </div>
+              
+              {/* ปุ่มลบอุปกรณ์ */}
+              <button 
+                className="delete-device-btn" 
+                onClick={confirmDeleteDevice} 
+                title="ลบอุปกรณ์นี้"
               >
-                {devices.map(d => (
-                  <option key={d.device_id} value={d.device_id}>{d.device_name}</option>
-                ))}
-              </select>
-              <ChevronDown size={16} className="device-chevron" />
+                <Trash2 size={18} />
+              </button>
             </div>
           )}
         </div>
@@ -249,6 +307,7 @@ const Home = () => {
           <button
             className="menu-btn btn-primary full-width"
             onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}
+            disabled={!selectedDeviceId}
           >
             <div className="btn-icon"><Activity size={20} /></div>
             ดูกราฟ Real-time
@@ -257,6 +316,7 @@ const Home = () => {
           <button
             className="menu-btn btn-sky"
             onClick={() => navigate(selectedDeviceId ? `/water-quality?deviceId=${selectedDeviceId}` : '/water-quality')}
+            disabled={!selectedDeviceId}
           >
             <div className="btn-icon"><BarChart2 size={20} /></div>
             ประวัติย้อนหลัง
@@ -289,7 +349,7 @@ const Home = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setModal({ isOpen: false, title: '', content: '' })}
+            onClick={handleCloseModal}
           >
             <motion.div
               className="modal-sheet"
@@ -302,12 +362,17 @@ const Home = () => {
               <div className="modal-handle" />
               <div className="modal-title">{modal.title}</div>
               <div className="modal-body">{modal.content}</div>
-              <button
-                className="modal-close-btn"
-                onClick={() => setModal({ isOpen: false, title: '', content: '' })}
-              >
-                เข้าใจแล้ว
-              </button>
+              
+              <div className="modal-actions">
+                {modal.isConfirm ? (
+                  <>
+                    <button className="modal-btn cancel" onClick={handleCloseModal}>ยกเลิก</button>
+                    <button className="modal-btn confirm" onClick={modal.onConfirm}>ลบอุปกรณ์</button>
+                  </>
+                ) : (
+                  <button className="modal-btn primary" onClick={handleCloseModal}>เข้าใจแล้ว</button>
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}
