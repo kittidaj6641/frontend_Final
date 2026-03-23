@@ -41,7 +41,6 @@ const Login = () => {
       {/* Left panel: branding + form */}
       <section className="auth-left">
         <div className="brand">
-          <p className="brand-sub">แพลตฟอร์มจัดการข้อมูลฟาร์มกุ้งที่ช่วยให้ดูค่าคุณภาพน้ำและอุปกรณ์เดิมของคุณได้ง่ายขึ้นในหน้าจอเดียว</p>
           {/* logo เล็ก ๆ (ใส่ไฟล์โลโก้ได้ตามต้องการ) */}
           {/* <img src="/logo-shrimp.svg" alt="logo" className="brand-logo" /> */}
           <h1 className="brand-title">
