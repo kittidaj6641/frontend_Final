@@ -346,19 +346,23 @@ body {
 /* ─── Menu Section ───────────────────── */
 .menu-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr); /* จัดเรียง 2 คอลัมน์ */
+  grid-auto-rows: 1fr; /* บังคับให้ทุกกล่องสูงเท่ากันเป๊ะ 100% เสมอ */
   gap: 12px;
 }
-
 
 .menu-btn {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: flex-start;
   gap: 12px;
   padding: 18px;
   border-radius: var(--radius-lg);
-  border: none;
+  border: 1px solid transparent; /* ใส่ขอบใส 1px ไว้ เพื่อให้ขนาดเท่ากับปุ่มที่มีขอบ */
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
   font-family: var(--font-body);
   font-size: 15px;
   font-weight: 600;
@@ -368,10 +372,8 @@ body {
   -webkit-tap-highlight-color: transparent;
   position: relative;
   overflow: hidden;
-
-  /* 👇 เพิ่มบรรทัดนี้ลงไปเพื่อบังคับให้ความสูงเท่ากันทุกปุ่ม */
-  height: 100%; 
 }
+
 .menu-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -389,23 +391,11 @@ body {
 }
 .menu-btn:hover .btn-icon { transform: scale(1.1); }
 
-/* Full-width buttons */
-.menu-btn.full-width {
-  grid-column: 1 / -1;
-  flex-direction: row !important;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-}
-
-.menu-btn.full-width .btn-icon {
-  flex-shrink: 0;
-}
-
 /* Variants */
 .btn-primary {
   background: var(--teal);
   color: #fff;
+  border-color: transparent;
   box-shadow: 0 4px 15px rgba(13,148,136,0.3);
 }
 .btn-primary:not(:disabled):hover { background: var(--teal-deep); }
@@ -414,6 +404,7 @@ body {
 .btn-sky {
   background: var(--sky);
   color: #fff;
+  border-color: transparent;
   box-shadow: 0 4px 15px rgba(14,165,233,0.3);
 }
 .btn-sky:not(:disabled):hover { background: #0284c7; }
@@ -421,7 +412,7 @@ body {
 
 .btn-outline {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border-color: var(--border);
   color: var(--text-2);
   box-shadow: var(--shadow-sm);
 }
@@ -430,7 +421,7 @@ body {
 
 .btn-amber {
   background: linear-gradient(135deg, #fffbeb, #fef3c7);
-  border: 1px solid #fde68a;
+  border-color: #fde68a;
   color: #92400e;
   box-shadow: 0 4px 15px rgba(245,158,11,0.1);
 }
@@ -519,12 +510,7 @@ body {
 .modal-btn.confirm:hover { background: #be123c; }
 
 /* ─── Responsive adjustments ─────────── */
-/* ─── Responsive adjustments ─────────── */
 @media (min-width: 680px) {
   .dashboard-body { max-width: 760px; padding: 32px 24px; }
-  
-  /* 👇 แก้จาก repeat(4, 1fr) เป็น repeat(2, 1fr) */
-  .menu-grid { grid-template-columns: repeat(2, 1fr); } 
-  
-  .menu-btn.full-width { grid-column: auto; flex-direction: column; align-items: flex-start; }
+  .menu-grid { grid-template-columns: repeat(2, 1fr); }
 }
