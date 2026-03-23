@@ -54,6 +54,7 @@ const Register = () => {
       {/* Left: Branding + Card */}
       <section className="auth-left">
         <div className="brand">
+          <p className="brand-sub">สมัครสมาชิกเพื่อเชื่อมต่อกับระบบติดตามคุณภาพน้ำเดิม พร้อมใช้งานอุปกรณ์และข้อมูลชุดเดิมได้ทันที</p>
           <h1 className="brand-title">
             SANBOON FARM
             <img

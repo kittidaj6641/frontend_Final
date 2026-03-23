@@ -1,67 +1,256 @@
-/* ในไฟล์ ./Realtime.css */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
 
-/* คอนเทนเนอร์หลักของหน้า */
+:root {
+  --rt-bg: #071a26;
+  --rt-surface: rgba(255, 255, 255, 0.9);
+  --rt-surface-strong: #ffffff;
+  --rt-text: #0f172a;
+  --rt-muted: #64748b;
+  --rt-accent: #06b6d4;
+  --rt-accent-2: #14b8a6;
+  --rt-shadow: 0 24px 80px rgba(7, 26, 38, 0.18);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+
 .realtime-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  min-height: 100vh;
+  padding: 28px clamp(18px, 4vw, 40px) 40px;
+  background:
+    radial-gradient(circle at top left, rgba(34, 211, 238, 0.16), transparent 26%),
+    radial-gradient(circle at right, rgba(20, 184, 166, 0.18), transparent 24%),
+    linear-gradient(180deg, #effbff 0%, #f7fffd 48%, #ecfdf5 100%);
+}
+
+.back-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--rt-text);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.back-home-btn:hover {
+  transform: translateY(-1px);
 }
 
 .realtime-container h1 {
+  margin: 24px 0 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
   text-align: center;
-  color: #333;
-  margin-bottom: 2rem;
+  font-family: 'Outfit', sans-serif;
+  color: var(--rt-text);
+  font-size: clamp(30px, 5vw, 44px);
+  letter-spacing: -0.03em;
 }
 
-/* ตารางแสดงผลแบบ Grid */
-.sensor-grid {
-  display: grid;
-  /* สร้างตารางแบบยืดหยุ่น:
-    - บนจอใหญ่: พยายามแสดง 4 คอลัมน์ (1fr 1fr 1fr 1fr)
-    - บนจอกลาง/เล็ก: จะปรับเป็น 2 หรือ 1 คอลัมน์อัตโนมัติ
-  */
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem; /* ระยะห่างระหว่างการ์ด */
+.realtime-container h3 {
+  margin: 0 0 28px;
+  text-align: center;
+  color: var(--rt-muted) !important;
+  font-size: 15px;
+  font-weight: 500;
 }
 
-/* สไตล์ของการ์ดแต่ละใบ */
-.sensor-card {
-  background-color: #ffffff;
-  border-radius: 10px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.loading-container,
+.error-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 36px 28px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--rt-shadow);
+  text-align: center;
 }
 
-.sensor-card:hover {
-  transform: translateY(-5px); /* เด้งขึ้นเล็กน้อยเมื่อชี้ */
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-}
-
-/* หัวข้อของการ์ด (เช่น 'Temperature') */
-.sensor-card h2 {
-  margin-top: 0;
-  font-size: 1.1rem;
-  color: #555;
+.loading-text {
+  margin: 0;
+  color: var(--rt-text);
+  font-size: 18px;
   font-weight: 600;
 }
 
-/* ตัวเลขค่าที่วัดได้ */
-.sensor-value {
-  font-size: 2.8rem;
-  font-weight: bold;
-  color: #007BFF; /* สีน้ำเงิน (เหมือนที่เคยใช้) */
-  margin: 0.5rem 0 0 0;
-  
-  /* จัดการแสดงผลตัวเลขและหน่วย */
-  display: flex;
-  align-items: baseline; /* ให้เส้นฐานของตัวเลขและหน่วยตรงกัน */
+.error-container button {
+  margin-top: 16px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--rt-accent-2), var(--rt-accent));
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
 }
 
-/* หน่วย (เช่น '°C', 'mg/L') */
+.sensor-grid {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.sensor-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  padding: 24px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), var(--rt-surface-strong));
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: var(--rt-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  isolation: isolate;
+}
+
+.sensor-card::before {
+  content: '';
+  position: absolute;
+  inset: auto -35% -35% auto;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  z-index: -1;
+}
+
+.sensor-card.temp {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
+}
+
+.sensor-card.do {
+  background: linear-gradient(135deg, #ecfeff 0%, #ffffff 100%);
+}
+
+.sensor-card.ph {
+  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
+}
+
+.sensor-card.bod {
+  background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.card-header svg {
+  width: 48px;
+  height: 48px;
+  padding: 10px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--rt-text);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+
+.sensor-card h2 {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  color: var(--rt-text);
+}
+
+.sensor-value {
+  margin: 24px 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(40px, 5vw, 56px);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: #0f172a;
+}
+
 .sensor-value span {
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: #888;
-  margin-left: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--rt-muted);
+}
+
+.status-dot,
+.blink-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.status-dot {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.42);
+}
+
+.update-status {
+  max-width: 1180px;
+  margin: 24px auto 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--rt-text);
+  font-weight: 600;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.blink-dot {
+  background: #22c55e;
+  animation: pulse 1.8s infinite;
+}
+
+.icon-pulse {
+  color: var(--rt-accent);
+  animation: pulse 1.8s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.82); opacity: 0.6; }
+}
+
+@media (max-width: 720px) {
+  .realtime-container {
+    padding-inline: 16px;
+  }
+
+  .sensor-card {
+    min-height: 190px;
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .update-status {
+    display: flex;
+    width: 100%;
+    border-radius: 20px;
+  }
 }
