@@ -3,6 +3,8 @@ import React, { useMemo } from 'react';
 import './WaterGauge.css';
 
 // ─── Sensor config ────────────────────────────────────────────────────────────
+// ─── Sensor config ────────────────────────────────────────────────────────────
+// ─── Sensor config ────────────────────────────────────────────────────────────
 const CONFIGS = {
   ph: {
     label: 'ความเป็นกรด-ด่าง',
@@ -10,16 +12,15 @@ const CONFIGS = {
     unit: '',
     min: 0, max: 14,
     zones: [
-      { from: 0,   to: 5,   color: '#ef4444' },
-      { from: 5,   to: 6.5, color: '#f59e0b' },
-      { from: 6.5, to: 8.5, color: '#22c55e' },
-      { from: 8.5, to: 10,  color: '#f59e0b' },
-      { from: 10,  to: 14,  color: '#ef4444' },
+      { from: 0,   to: 5,   color: '#ef4444' }, // แก้ไข (แดง)
+      { from: 5,   to: 6.5, color: '#f59e0b' }, // เฝ้าระวัง (ส้ม)
+      { from: 6.5, to: 8.5, color: '#22c55e' }, // ปกติ (เขียว)
+      { from: 8.5, to: 14,  color: '#ef4444' }, // นอกเหนือจากนี้ให้เป็นสีแดง/อันตราย
     ],
     status: v => {
       if (v >= 6.5 && v <= 8.5) return { cls: 'ok',   text: 'ปกติ' };
-      if ((v >= 5 && v < 6.5) || (v > 8.5 && v <= 10)) return { cls: 'warn', text: 'ควรระวัง' };
-      return { cls: 'bad', text: 'อันตราย' };
+      if (v >= 5 && v < 6.5)    return { cls: 'warn', text: 'เฝ้าระวัง' };
+      return { cls: 'bad', text: 'แก้ไข' };
     },
     safe: '6.5 – 8.5',
   },
@@ -29,18 +30,19 @@ const CONFIGS = {
     unit: 'mg/L',
     min: 0, max: 15,
     zones: [
-      { from: 0,  to: 3,  color: '#ef4444' },
-      { from: 3,  to: 5,  color: '#f59e0b' },
-      { from: 5,  to: 12, color: '#22c55e' },
-      { from: 12, to: 15, color: '#f59e0b' },
+      { from: 0, to: 2, color: '#ef4444' }, // แก้ไข (แดง)
+      { from: 2, to: 3, color: '#f59e0b' }, // เฝ้าระวัง (ส้ม)
+      { from: 3, to: 8, color: '#22c55e' }, // ปกติ (เขียว)
+      { from: 8, to: 15, color: '#22c55e' }, // หรือจะใส่สีอื่นหาก Oxygen สูงเกินไป แต่ตามโจทย์คือ 3-8 ปกติ
     ],
     status: v => {
-      if (v >= 5 && v <= 12) return { cls: 'ok',   text: 'ปกติ' };
-      if ((v >= 3 && v < 5) || v > 12) return { cls: 'warn', text: 'ควรระวัง' };
-      return { cls: 'bad', text: 'อันตราย' };
+      if (v >= 3 && v <= 8)  return { cls: 'ok',   text: 'ปกติ' };
+      if (v >= 2 && v < 3)   return { cls: 'warn', text: 'เฝ้าระวัง' };
+      return { cls: 'bad', text: 'แก้ไข' };
     },
-    safe: '5 – 12 mg/L',
+    safe: '3 – 8 mg/L',
   },
+  // ... temp และ turbidity คงเดิมตามโค้ดที่คุณส่งมา
   temp: {
     label: 'อุณหภูมิน้ำ',
     tag: 'Temp',
