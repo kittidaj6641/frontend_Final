@@ -1,264 +1,251 @@
-/* src/AddDevice.css */
-@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap');
+/* ===================================
+   SmartFarm AI — Add Device CSS
+   Design: Modern Clean (Kanit Font)
+   =================================== */
 
-.add-device-page {
-  min-height: 100vh;
-  background-color: #f3f4f6;
-  font-family: 'Sarabun', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.add-device-container {
-  width: 100%;
-  max-width: 500px;
-}
-
-/* Header & Nav */
-.form-header-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.form-header-nav h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #1f2937;
-  font-weight: 600;
-}
-
-.back-btn {
-  background: none;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #6b7280;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.back-btn:hover {
-  background-color: #e5e7eb;
-  color: #374151;
-}
-
-/* Main Card */
-.form-card {
-  background: white;
-  border-radius: 20px;
-  padding: 30px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.card-icon-header {
-  text-align: center;
-  margin-bottom: 25px;
-}
-
-.icon-circle {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 15px;
-  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
-}
-
-.form-subtitle {
-  color: #6b7280;
-  font-size: 0.95rem;
-  margin: 0;
-}
-
-/* Form Styling */
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  font-weight: 500;
-  margin-bottom: 8px;
-  color: #374151;
-  font-size: 0.95rem;
-}
-
-.required {
-  color: #dc3545;
-  margin-left: 3px;
-}
-
-.form-input {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 1rem;
-  transition: all 0.2s;
-  background-color: #f9fafb;
-  box-sizing: border-box; /* สำคัญ */
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #007bff;
-  background-color: #fff;
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
-}
-
-.monospace-font {
-  font-family: 'Courier New', Courier, monospace;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-}
-
-.input-hint {
-  display: block;
-  margin-top: 5px;
-  font-size: 0.8rem;
-  color: #9ca3af;
-}
-
-.input-with-icon {
-  position: relative;
-}
-
-.field-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-}
-
-.form-input.pl-10 {
-  padding-left: 45px;
-}
-
-/* Button */
-.submit-btn {
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(135deg, #007bff, #0069d9);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: transform 0.1s, box-shadow 0.2s;
-  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
-  margin-top: 10px;
-}
-
-.submit-btn:hover {
-  background: linear-gradient(135deg, #0069d9, #0056b3);
-  box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
-  transform: translateY(-1px);
-}
-
-.submit-btn:active {
-  transform: translateY(1px);
-}
-
-.submit-btn:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Alerts */
-.alert-box {
-  padding: 12px 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.9rem;
-}
-
-.alert-box.success {
-  background-color: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-}
-
-.alert-box.error {
-  background-color: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
-}
-
-/* Debug Section */
-.debug-section {
-  margin-top: 30px;
-  border-top: 1px solid #f3f4f6;
-  padding-top: 15px;
-}
-
-.debug-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  color: #9ca3af;
-  font-weight: 600;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-
-.debug-content {
-  font-family: 'Courier New', monospace;
-  font-size: 0.7rem;
-  color: #d1d5db;
-  background: #1f2937;
-  padding: 10px;
-  border-radius: 6px;
-  line-height: 1.4;
-}
-
-/* Loader Animation */
-.loader {
-  border: 3px solid rgba(255,255,255,0.3);
-  border-radius: 50%;
-  border-top: 3px solid #fff;
-  width: 20px;
-  height: 20px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Mobile Responsive */
-@media (max-width: 480px) {
-  .add-device-page {
-    padding: 10px;
+   .add-device-page {
+    min-height: 100vh;
+    background: #f8fafc;
+    font-family: 'Kanit', sans-serif;
+    color: #0f172a;
+    display: flex;
+    flex-direction: column;
   }
   
-  .form-card {
-    padding: 20px;
+  /* ── Header ── */
+  .ad-header {
+    background: #fff;
+    height: 65px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
-}
+  
+  .ad-back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .ad-back-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+  
+  .ad-header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  
+  /* ── Main Body ── */
+  .ad-main {
+    padding: 32px 20px;
+    max-width: 500px;
+    margin: 0 auto;
+    width: 100%;
+    flex: 1;
+  }
+  
+  .ad-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 30px 24px;
+    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05);
+    border: 1px solid #f1f5f9;
+  }
+  
+  .ad-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .ad-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #0ea5e9, #0d9488);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(13, 148, 136, 0.3);
+  }
+  
+  .ad-card-text h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #0f172a;
+  }
+  
+  .ad-card-text p {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.4;
+  }
+  
+  /* ── Alerts ── */
+  .ad-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .ad-alert.error {
+    background: #fef2f2;
+    color: #e11d48;
+    border: 1px solid #ffe4e6;
+  }
+  
+  .ad-alert.success {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #d1fae5;
+  }
+  
+  /* ── Form Inputs ── */
+  .ad-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .ad-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .ad-input-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+  }
+  
+  .ad-required {
+    color: #e11d48;
+  }
+  
+  .ad-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 15px;
+    color: #0f172a;
+    transition: all 0.2s;
+    outline: none;
+    box-sizing: border-box;
+  }
+  
+  .ad-input:focus {
+    background: #fff;
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+  }
+  
+  .ad-input:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+  }
+  
+  .ad-input.font-mono {
+    font-family: 'Inter', monospace;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  
+  .ad-hint {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  
+  /* Input with Icon */
+  .ad-input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .ad-input-icon {
+    position: absolute;
+    left: 16px;
+    color: #94a3b8;
+    pointer-events: none;
+  }
+  
+  .ad-input.with-icon {
+    padding-left: 44px;
+  }
+  
+  /* ── Submit Button ── */
+  .ad-submit-btn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 16px;
+    background: #0d9488;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(13, 148, 136, 0.25);
+  }
+  
+  .ad-submit-btn:hover:not(:disabled) {
+    background: #0f766e;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
+  }
+  
+  .ad-submit-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  
+  .ad-submit-btn:disabled {
+    background: #cbd5e1;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  
+  .ad-loader {
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
