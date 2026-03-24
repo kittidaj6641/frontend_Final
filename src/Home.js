@@ -172,6 +172,9 @@ const Home = () => {
           <span className="brand-name">Smart<span className="brand-accent">Farm</span></span>
         </div>
         <nav className="nav">
+          <button className="nav-btn" title="ประวัติการเข้าสู่ระบบ" onClick={() => navigate('/login-logs')}>
+            <Clock size={17} />
+          </button>
           <button className="nav-btn" title="เกี่ยวกับ" onClick={() => setModal({ isOpen: true, title: 'SmartFarm AI', content: 'ระบบจัดการและติดตามคุณภาพน้ำอัจฉริยะสำหรับการเพาะเลี้ยงสัตว์น้ำ เวอร์ชัน 1.0 — ออกแบบให้ใช้งานง่ายและแม่นยำสูงสุด', isConfirm: false })}>
             <Info size={17} />
           </button>
