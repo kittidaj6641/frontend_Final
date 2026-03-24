@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowLeft, Save, Cpu, MapPin, 
-  AlertCircle, CheckCircle 
+  ArrowLeft, Save, PlusCircle, MapPin, 
+  AlertTriangle, CheckCircle 
 } from 'lucide-react';
 import axios from 'axios';
 import config from './config';
@@ -24,16 +24,17 @@ function AddDevice() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('กรุณาเข้าสู่ระบบก่อนใช้งาน');
       navigate('/login');
     }
   }, [navigate]);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
     if (error) setError('');
     if (success) setSuccess('');
   };
@@ -41,7 +42,6 @@ function AddDevice() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // ตรวจสอบข้อมูลก่อนส่ง
     if (!formData.deviceName.trim() || !formData.deviceId.trim()) {
       setError('กรุณากรอกชื่อและรหัสอุปกรณ์ให้ครบถ้วน');
       return;
@@ -75,10 +75,9 @@ function AddDevice() {
       );
 
       if (response.status === 201 || response.status === 200) {
-        setSuccess('บันทึกอุปกรณ์ใหม่สำเร็จ!');
+        setSuccess('เพิ่มอุปกรณ์เข้าสู่บัญชีของคุณเรียบร้อยแล้ว');
         setFormData({ deviceName: '', deviceId: '', location: '' });
         
-        // รอ 1.5 วินาทีแล้วนำทางกลับหน้าหลัก
         setTimeout(() => {
           navigate('/');
         }, 1500);
@@ -86,10 +85,10 @@ function AddDevice() {
       
     } catch (error) {
       console.error('Error:', error);
-      let errorMsg = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+      let errorMsg = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์";
       
       if (error.response) {
-        errorMsg = error.response.data?.error || error.response.data?.msg || `Server Error (${error.response.status})`;
+        errorMsg = error.response.data?.msg || error.response.data?.error || `Server Error (${error.response.status})`;
         if (error.response.status === 401) {
           errorMsg = 'Session หมดอายุ กรุณาเข้าสู่ระบบใหม่';
           setTimeout(() => navigate('/login'), 2000);
@@ -102,118 +101,125 @@ function AddDevice() {
   };
 
   return (
-    <div className="add-device-page">
-      <motion.div 
-        className="add-device-container"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        {/* ส่วนหัวของฟอร์ม */}
-        <header className="form-header-nav">
-          <button onClick={() => navigate('/')} className="back-btn">
-            <ArrowLeft size={20} /> ย้อนกลับ
-          </button>
-          <h2>ลงทะเบียนอุปกรณ์</h2>
-        </header>
+    <motion.div 
+      className="add-device-page"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      {/* ── Header ── */}
+      <header className="ad-header">
+        <button className="ad-back-btn" onClick={() => navigate('/')}>
+          <ArrowLeft size={18} />
+        </button>
+        <div className="ad-header-title">ลงทะเบียนเซนเซอร์</div>
+        <div style={{ width: 40 }}></div> {/* สร้างสมดุลให้ปุ่มย้อนกลับ */}
+      </header>
 
-        <div className="form-card">
-          <div className="card-icon-header">
-            <div className="icon-circle">
-              <Cpu size={32} color="white" />
+      {/* ── Main Body ── */}
+      <main className="ad-main">
+        <motion.div 
+          className="ad-card"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="ad-card-header">
+            <div className="ad-icon-wrapper">
+              <PlusCircle size={28} />
             </div>
-            <p className="form-subtitle">กรอกข้อมูลเพื่อเชื่อมต่ออุปกรณ์ IoT เข้าสู่ระบบ</p>
+            <div className="ad-card-text">
+              <h2>เพิ่มบ่อใหม่</h2>
+              <p>กรอกข้อมูลเพื่อเชื่อมต่อเซนเซอร์เข้าสู่ระบบของคุณ</p>
+            </div>
           </div>
 
-          {/* ส่วนแสดงข้อความแจ้งเตือน (สำเร็จ / ผิดพลาด) */}
           <AnimatePresence>
             {success && (
               <motion.div 
-                initial={{ opacity: 0, height: 0 }} 
-                animate={{ opacity: 1, height: 'auto' }} 
-                exit={{ opacity: 0, height: 0 }}
-                className="alert-box success"
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }} 
+                animate={{ opacity: 1, height: 'auto', marginBottom: 20 }} 
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                className="ad-alert success"
               >
-                <CheckCircle size={20} /> {success}
+                <CheckCircle size={18} /> {success}
               </motion.div>
             )}
 
             {error && (
               <motion.div 
-                initial={{ opacity: 0, height: 0 }} 
-                animate={{ opacity: 1, height: 'auto' }} 
-                exit={{ opacity: 0, height: 0 }}
-                className="alert-box error"
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }} 
+                animate={{ opacity: 1, height: 'auto', marginBottom: 20 }} 
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                className="ad-alert error"
               >
-                <AlertCircle size={20} /> {error}
+                <AlertTriangle size={18} /> {error}
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* ฟอร์มกรอกข้อมูล */}
-          <form onSubmit={handleSubmit} className="device-form">
-            <div className="form-group">
-              <label>
-                ชื่ออุปกรณ์ (Device Name) <span className="required">*</span>
-              </label>
+          <form onSubmit={handleSubmit} className="ad-form">
+            
+            <div className="ad-input-group">
+              <label>ชื่อเรียกอุปกรณ์ <span className="ad-required">*</span></label>
               <input 
                 type="text" 
                 name="deviceName" 
-                className="form-input"
-                placeholder="เช่น บ่อกุ้ง A, เครื่องวัดหน้าฟาร์ม" 
+                className="ad-input"
+                placeholder="เช่น บ่ออนุบาลกุ้ง, บ่อโซน A" 
                 value={formData.deviceName}
                 onChange={handleChange}
                 disabled={loading}
+                autoComplete="off"
               />
             </div>
 
-            <div className="form-group">
-              <label>
-                รหัสอุปกรณ์ (Device ID) <span className="required">*</span>
-              </label>
+            <div className="ad-input-group">
+              <label>รหัสอุปกรณ์ (Device ID) <span className="ad-required">*</span></label>
               <input 
                 type="text" 
                 name="deviceId" 
-                className="form-input monospace-font"
+                className="ad-input font-mono"
                 placeholder="เช่น ESP32_001" 
                 value={formData.deviceId}
                 onChange={handleChange}
                 disabled={loading}
+                autoComplete="off"
               />
-              <small className="input-hint">
-                ต้องตรงกับ ID ที่ระบุใน Code ของบอร์ด ESP32
-              </small>
+              <small className="ad-hint">กรอกรหัสที่ระบุอยู่บนกล่องเซนเซอร์หรือในคู่มือ</small>
             </div>
 
-            <div className="form-group">
-              <label>สถานที่ติดตั้ง (Location)</label>
-              <div className="input-with-icon">
-                <MapPin size={18} className="field-icon" />
+            <div className="ad-input-group">
+              <label>สถานที่ติดตั้ง (เผื่อไว้ระบุโซน)</label>
+              <div className="ad-input-with-icon">
+                <MapPin size={18} className="ad-input-icon" />
                 <input 
                   type="text" 
                   name="location" 
-                  className="form-input pl-10"
-                  placeholder="เช่น โซนเหนือ, บ่ออนุบาล" 
+                  className="ad-input with-icon"
+                  placeholder="เช่น ฟาร์มท้ายหมู่บ้าน" 
                   value={formData.location}
                   onChange={handleChange}
                   disabled={loading}
+                  autoComplete="off"
                 />
               </div>
             </div>
 
-            <button type="submit" className="submit-btn" disabled={loading}>
+            <button type="submit" className="ad-submit-btn" disabled={loading}>
               {loading ? (
-                <span className="loader"></span>
+                <span className="ad-loader">กำลังบันทึกข้อมูล...</span>
               ) : (
                 <>
-                  <Save size={20} /> บันทึกข้อมูล
+                  <Save size={20} /> บันทึกและเชื่อมต่อ
                 </>
               )}
             </button>
+            
           </form>
-        </div>
-      </motion.div>
-    </div>
+        </motion.div>
+      </main>
+    </motion.div>
   );
 }
 
