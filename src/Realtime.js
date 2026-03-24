@@ -1,19 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Home, Activity, Droplets, Thermometer, Wind } from 'lucide-react';
+import { 
+  ArrowLeft, Activity, Droplets, Thermometer, 
+  Wind, Zap, AlertTriangle, CheckCircle 
+} from 'lucide-react';
 import './Realtime.css';
 
 // Import Config
 import { database } from './firebaseConfig';
 import { ref, onValue } from "firebase/database";
 
+// ฟังก์ชันเช็คเกณฑ์มาตรฐานน้ำ (กุ้งก้ามกราม) เพื่อโชว์สีสถานะ
+const getStatus = (type, value) => {
+  const val = Number(value);
+  if (type === 'ph') {
+    if (val < 6.5 || val > 9.0) return 'danger';
+    if (val < 7.0 || val > 8.5) return 'warning';
+    return 'normal';
+  }
+  if (type === 'do') {
+    if (val < 3.0) return 'danger';
+    if (val < 4.0) return 'warning';
+    return 'normal';
+  }
+  if (type === 'temp') {
+    if (val < 25 || val > 34) return 'danger';
+    if (val < 27 || val > 32) return 'warning';
+    return 'normal';
+  }
+  if (type === 'turbidity') {
+    if (val >= 100) return 'danger';
+    if (val > 60) return 'warning';
+    return 'normal';
+  }
+  return 'normal';
+};
+
 function Realtime() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const deviceId = searchParams.get('deviceId');
 
-  // ตั้งค่า State ให้ตรงกับข้อมูลที่คุณส่งมา
   const [sensorData, setSensorData] = useState({
     temp: 0,
     do: 0,
@@ -32,21 +60,18 @@ function Realtime() {
       return;
     }
 
-    // เชื่อมต่อ Database ที่ Path ของ Device นั้นๆ
-    // Path ใหม่: /devices/{deviceId}/current
     const sensorRef = ref(database, `/devices/${deviceId}/current`);
 
     const unsubscribe = onValue(sensorRef, (snapshot) => {
       const data = snapshot.val();
 
       if (data) {
-        // อัปเดตข้อมูลตาม Key ที่คุณให้มาเป๊ะๆ
         setSensorData({
-          temp: data.temperature ?? 0,      // temperature
-          do: data.dissolved_oxygen ?? 0, // dissolved_oxygen
-          ph: data.ph ?? 0,               // ph
-          turbidity: data.turbidity ?? 0,  // turbidity
-          timestamp: data.timestamp         // timestamp
+          temp: data.temperature ?? 0,
+          do: data.dissolved_oxygen ?? 0,
+          ph: data.ph ?? 0,
+          turbidity: data.turbidity ?? 0,
+          timestamp: data.timestamp
         });
       }
       setLoading(false);
@@ -59,73 +84,125 @@ function Realtime() {
     return () => unsubscribe();
   }, [deviceId]);
 
+  // Component สำหรับสร้างการ์ดแต่ละใบให้สวยงาม
+  const SensorCard = ({ title, value, unit, icon: Icon, type, color }) => {
+    const status = getStatus(type, value);
+    
+    return (
+      <div className={`rt-card status-${status}`}>
+        <div className="rt-card-header">
+          <div className="rt-card-title">
+            <div className="rt-icon-wrapper" style={{ color: color, background: `${color}15` }}>
+              <Icon size={20} />
+            </div>
+            <span>{title}</span>
+          </div>
+          {status === 'normal' && <CheckCircle size={16} className="rt-status-icon text-green" title="ปกติ" />}
+          {status === 'warning' && <AlertTriangle size={16} className="rt-status-icon text-amber" title="เฝ้าระวัง" />}
+          {status === 'danger' && <AlertTriangle size={16} className="rt-status-icon text-rose" title="อันตราย" />}
+        </div>
+        
+        <div className="rt-card-body">
+          <div className="rt-value-wrap">
+            <span className="rt-value">{Number(value).toFixed(type === 'ph' ? 2 : 1)}</span>
+            <span className="rt-unit">{unit}</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-      className="realtime-container"
+    <motion.div 
+      className="rt-page"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
     >
-      <button onClick={() => navigate('/')} className="back-home-btn">
-        <Home size={16} /> กลับหน้าหลัก
-      </button>
-
-      <h1><Activity className="icon-pulse" /> ข้อมูลคุณภาพน้ำ (Realtime)</h1>
-      <h3 style={{ textAlign: 'center', color: '#666', marginTop: '-10px' }}>อุปกรณ์: {deviceId || 'ไม่ระบุ'}</h3>
-
-      {loading ? (
-        <div className="loading-container">
-          <p className="loading-text">กำลังเชื่อมต่อกับเซ็นเซอร์...</p>
+      {/* ── Header ── */}
+      <header className="rt-header">
+        <button className="rt-back-btn" onClick={() => navigate('/')}>
+          <ArrowLeft size={18} />
+        </button>
+        <div className="rt-header-title">ข้อมูลคุณภาพน้ำ</div>
+        <div className="rt-live-badge">
+          <span className="rt-live-dot"></span> LIVE
         </div>
-      ) : error ? (
-        <div className="error-container" style={{ textAlign: 'center', color: 'red', marginTop: '20px' }}>
-          <p>{error}</p>
-          <button onClick={() => navigate('/')} style={{ marginTop: '10px', padding: '5px 10px' }}>กลับไปเลือกอุปกรณ์</button>
+      </header>
+
+      {/* ── Main Body ── */}
+      <main className="rt-main">
+        <div className="rt-device-info">
+          <Activity size={18} className="text-teal" />
+          <span>อุปกรณ์ปัจจุบัน: <strong>{deviceId || 'ไม่ระบุ'}</strong></span>
         </div>
-      ) : (
-        <div className="sensor-grid">
-          <div className="sensor-card temp">
-            <div className="card-header">
-              <Thermometer size={24} />
-              <h2>Temperature</h2>
-            </div>
-            <p className="sensor-value">{Number(sensorData.temp).toFixed(1)} <span>°C</span></p>
-            {/* เปลี่ยนสีจุดสถานะตามเกณฑ์อุณหภูมิ (เช่น > 32 หรือ < 20 คือผิดปกติ) */}
-            <div className="status-dot" style={{ background: sensorData.temp > 32 || sensorData.temp < 20 ? '#ff6b6b' : '#2ecc71' }}></div>
-          </div>
 
-          <div className="sensor-card do">
-            <div className="card-header">
-              <Wind size={24} />
-              <h2>Dissolved Oxygen</h2>
-            </div>
-            <p className="sensor-value">{Number(sensorData.do).toFixed(2)} <span>mg/L</span></p>
+        {loading ? (
+          <div className="rt-loading">
+            <div className="rt-spinner"></div>
+            <p>กำลังเชื่อมต่อกับเซนเซอร์...</p>
           </div>
-
-          <div className="sensor-card ph">
-            <div className="card-header">
-              <Droplets size={24} />
-              <h2>pH</h2>
-            </div>
-            <p className="sensor-value">{Number(sensorData.ph).toFixed(2)}</p>
+        ) : error ? (
+          <div className="rt-error">
+            <AlertTriangle size={24} />
+            <p>{error}</p>
+            <button onClick={() => navigate('/')} className="rt-btn-primary">กลับไปเลือกอุปกรณ์</button>
           </div>
+        ) : (
+          <motion.div 
+            className="rt-grid"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <SensorCard 
+              title="ค่า pH" 
+              value={sensorData.ph} 
+              unit="" 
+              icon={Droplets} 
+              type="ph" 
+              color="#0ea5e9" 
+            />
+            <SensorCard 
+              title="ออกซิเจน (DO)" 
+              value={sensorData.do} 
+              unit="mg/L" 
+              icon={Wind} 
+              type="do" 
+              color="#0d9488" 
+            />
+            <SensorCard 
+              title="อุณหภูมิ" 
+              value={sensorData.temp} 
+              unit="°C" 
+              icon={Thermometer} 
+              type="temp" 
+              color="#f59e0b" 
+            />
+            <SensorCard 
+              title="ความขุ่น" 
+              value={sensorData.turbidity} 
+              unit="NTU" 
+              icon={Zap} 
+              type="turbidity" 
+              color="#8b5cf6" 
+            />
+          </motion.div>
+        )}
 
-          <div className="sensor-card bod">
-            <div className="card-header">
-              <Activity size={24} />
-              <h2>Turbidity</h2>
-            </div>
-            <p className="sensor-value">{Number(sensorData.turbidity).toFixed(2)} <span>NTU</span></p>
-          </div>
-        </div>
-      )}
-
-      {!loading && !error && (
-        <p className="update-status">
-          <span className="blink-dot"></span> อัปเดตล่าสุด: {sensorData.timestamp ? new Date(sensorData.timestamp).toLocaleString('th-TH') : new Date().toLocaleTimeString('th-TH')}
-        </p>
-      )}
+        <AnimatePresence>
+          {!loading && !error && (
+            <motion.div 
+              className="rt-footer-info"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              อัปเดตล่าสุด: {sensorData.timestamp ? new Date(sensorData.timestamp).toLocaleString('th-TH') : new Date().toLocaleTimeString('th-TH')}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
     </motion.div>
   );
 }
