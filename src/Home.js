@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LogOut, Clock, Activity, PlusCircle,
+  LogOut, Activity, PlusCircle,
   ChevronDown, Fish, BarChart2, BookOpen, AlertTriangle, Info, Trash2
 } from 'lucide-react';
 import {
@@ -172,9 +172,7 @@ const Home = () => {
           <span className="brand-name">Smart<span className="brand-accent">Farm</span></span>
         </div>
         <nav className="nav">
-          <button className="nav-btn" title="ประวัติการเข้าสู่ระบบ" onClick={() => navigate('/login-logs')}>
-            <Clock size={17} />
-          </button>
+          {/* เอาปุ่มประวัติการเข้าสู่ระบบออกแล้ว */}
           <button className="nav-btn" title="เกี่ยวกับ" onClick={() => setModal({ isOpen: true, title: 'SmartFarm AI', content: 'ระบบจัดการและติดตามคุณภาพน้ำอัจฉริยะสำหรับการเพาะเลี้ยงสัตว์น้ำ เวอร์ชัน 1.0 — ออกแบบให้ใช้งานง่ายและแม่นยำสูงสุด', isConfirm: false })}>
             <Info size={17} />
           </button>
@@ -293,7 +291,6 @@ const Home = () => {
         </motion.div>
 
         {/* ── Quick Actions ── */}
-{/* ── Quick Actions ── */}
         <div className="section-label">เมนูด่วน</div>
         <motion.div
           className="menu-grid"
@@ -301,7 +298,6 @@ const Home = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.22 }}
         >
-          {/* เอาคลาส full-width ออกจากทุกปุ่มตรงนี้ครับ */}
           <button
             className="menu-btn btn-primary"
             onClick={() => navigate(`/realtime?deviceId=${selectedDeviceId}`)}
