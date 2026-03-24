@@ -16,7 +16,7 @@ const getStatus = (type, value) => {
   const val = Number(value);
   if (type === 'ph') {
     if (val < 6.5 || val > 9.0) return 'danger';
-    if (val < 7.0 || val > 8.5) return 'warning';
+    if (val < 6.0 || val > 8.5) return 'warning';
     return 'normal';
   }
   if (type === 'do') {
