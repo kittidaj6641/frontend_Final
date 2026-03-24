@@ -188,7 +188,7 @@ const Home = () => {
       <div className="hero-strip">
         <div className="hero-content">
           <div className="hero-text">
-            <h1>ภาพรวมบ่อเลี้ยง 🌊</h1>
+            <h1>ภาพรวมบ่อเลี้ยง</h1>
             <p>ติดตามคุณภาพน้ำแบบ Real-time เพื่อผลผลิตที่ดีที่สุด</p>
           </div>
 
