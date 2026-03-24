@@ -20,8 +20,8 @@ const getStatus = (type, value) => {
     return 'normal';
   }
   if (type === 'do') {
-    if (val < 3.0) return 'danger';
-    if (val < 4.0) return 'warning';
+    if (val < 2.0) return 'danger';
+    if (val < 3.0) return 'warning';
     return 'normal';
   }
   if (type === 'temp') {
@@ -30,8 +30,8 @@ const getStatus = (type, value) => {
     return 'normal';
   }
   if (type === 'turbidity') {
-    if (val >= 100) return 'danger';
-    if (val > 60) return 'warning';
+    if (val >= 1000) return 'danger';
+    if (val > 800) return 'warning';
     return 'normal';
   }
   return 'normal';
