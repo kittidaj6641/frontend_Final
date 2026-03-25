@@ -18,11 +18,11 @@ export const checkQuality = (type, value) => {
     // --- 2. pH ---
     // 0 - 5 = แก้ไข (แดง)
     // 5 - 6.5 = เฝ้าระวัง (ส้ม)
-    // 6.5 - 8.5 = ปกติ (เขียว)
+    // 7 - 8.5 = ปกติ (เขียว)
     if (type === 'ph') {
         if (val <= 5.0) return { status: 'critical', color: '#dc3545', msg: 'แก้ไข' };
         if (val < 6.5)  return { status: 'warning', color: '#fd7e14', msg: 'เฝ้าระวัง' };
-        if (val >= 6.5 && val <= 8.5) return { status: 'normal', color: '#28a745', msg: 'ปกติ' };
+        if (val >= 7.0 && val <= 8.5) return { status: 'normal', color: '#28a745', msg: 'ปกติ' };
         // กรณี pH สูงเกิน 8.5
         return { status: 'critical', color: '#dc3545', msg: 'แก้ไข (ด่างสูง)' };
     }
