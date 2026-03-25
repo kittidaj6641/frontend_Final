@@ -30,7 +30,7 @@ export const checkQuality = (type, value) => {
     // --- 3. Temperature (ใช้เกณฑ์เดิมของคุณ) ---
     if (type === 'temp' || type === 'temperature') {
         if (val < 24 || val > 34) return { status: 'critical', color: '#dc3545', msg: 'วิกฤต' };
-        if (val < 26 || val > 32) return { status: 'warning', color: '#fd7e14', msg: 'เฝ้าระวัง' };
+        if (val < 25 || val > 32) return { status: 'warning', color: '#fd7e14', msg: 'เฝ้าระวัง' };
         return { status: 'normal', color: '#28a745', msg: 'ปกติ' };
     }
 
