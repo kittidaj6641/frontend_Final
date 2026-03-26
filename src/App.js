@@ -9,6 +9,7 @@ import ShrimpInfo from './ShrimpInfo';
 import Status from './Status';
 import Realtime from './Realtime';
 import AddDevice from './AddDevice';
+import ThresholdSettings from './ThresholdSettings';
 
 
 const AnimatedRoutes = () => {
@@ -26,7 +27,7 @@ const AnimatedRoutes = () => {
                 <Route path="/water-quality" element={<WaterQuality />} />
                 <Route path="/shrimp-info" element={<ShrimpInfo />} />
                 <Route path="/status" element={<Status />} /> 
-               
+                <Route path="/threshold-settings" element={<ThresholdSettings />} />
                 
                 
             </Routes>
