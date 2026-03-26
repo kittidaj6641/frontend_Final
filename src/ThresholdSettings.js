@@ -1,6 +1,6 @@
 // src/ThresholdSettings.js
 // Panel ปรับค่า threshold สำหรับ pH, DO, Temperature, Turbidity
-// บันทึกลง localStorage และ export ฟังก์ชันอ่านค่า
+// บันทึกลง localStorage + Firebase (ให้ ESP32 อ่านได้)
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +12,10 @@ import {
 } from 'lucide-react';
 import './ThresholdSettings.css';
 
+// Firebase — เขียนค่าขึ้นให้ ESP32 อ่าน
+import { database } from './firebaseConfig';
+import { ref, set } from 'firebase/database';
+
 // ─── ค่า Default ──────────────────────────────────────────────────────────────
 export const DEFAULT_THRESHOLDS = {
   ph:        { warnLow: 5.0,  okLow: 6.5,  okHigh: 8.5,  warnHigh: 9.0  },
@@ -20,7 +24,9 @@ export const DEFAULT_THRESHOLDS = {
   turbidity: { warnLow: 0,    okLow: 0,    okHigh: 500,  warnHigh: 750  },
 };
 
-const STORAGE_KEY = 'smartfarm_thresholds';
+const STORAGE_KEY   = 'smartfarm_thresholds';
+// path เดียวกันกับที่ ESP32 จะ GET
+const FIREBASE_PATH = 'settings/thresholds';
 
 // ─── ฟังก์ชัน Public ──────────────────────────────────────────────────────────
 export function getThresholds() {
@@ -31,14 +37,15 @@ export function getThresholds() {
   return DEFAULT_THRESHOLDS;
 }
 
-export function saveThresholds(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
 export function getStatus(type, value) {
   const t = getThresholds()[type];
   if (!t) return 'normal';
   const v = Number(value);
+  if (type === 'turbidity') {
+    if (v > t.warnHigh) return 'danger';
+    if (v > t.okHigh)   return 'warning';
+    return 'normal';
+  }
   if (v < t.warnLow || v > t.warnHigh) return 'danger';
   if (v < t.okLow   || v > t.okHigh)   return 'warning';
   return 'normal';
@@ -102,16 +109,16 @@ function RangeBar({ sensor, vals }) {
 
   const segments = sensor.key === 'turbidity'
     ? [
-        { from: 0,            to: pct(vals.okHigh),   color: '#22c55e' },
-        { from: pct(vals.okHigh), to: pct(vals.warnHigh), color: '#f59e0b' },
-        { from: pct(vals.warnHigh), to: 100,            color: '#ef4444' },
+        { from: 0,                  to: pct(vals.okHigh),   color: '#22c55e' },
+        { from: pct(vals.okHigh),   to: pct(vals.warnHigh), color: '#f59e0b' },
+        { from: pct(vals.warnHigh), to: 100,                color: '#ef4444' },
       ]
     : [
-        { from: 0,                to: pct(vals.warnLow),  color: '#ef4444' },
-        { from: pct(vals.warnLow),to: pct(vals.okLow),   color: '#f59e0b' },
-        { from: pct(vals.okLow),  to: pct(vals.okHigh),  color: '#22c55e' },
-        { from: pct(vals.okHigh), to: pct(vals.warnHigh),color: '#f59e0b' },
-        { from: pct(vals.warnHigh), to: 100,             color: '#ef4444' },
+        { from: 0,                  to: pct(vals.warnLow),  color: '#ef4444' },
+        { from: pct(vals.warnLow),  to: pct(vals.okLow),    color: '#f59e0b' },
+        { from: pct(vals.okLow),    to: pct(vals.okHigh),   color: '#22c55e' },
+        { from: pct(vals.okHigh),   to: pct(vals.warnHigh), color: '#f59e0b' },
+        { from: pct(vals.warnHigh), to: 100,                color: '#ef4444' },
       ];
 
   return (
@@ -191,9 +198,10 @@ function SensorSection({ sensor, vals, onChange }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ThresholdSettings() {
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
   const [thresholds, setThresholds] = useState(getThresholds);
-  const [saved, setSaved] = useState(false);
+  const [saved,    setSaved]        = useState(false);
+  const [syncing,  setSyncing]      = useState(false);
 
   const handleChange = (sensorKey, fieldKey, value) => {
     setThresholds(prev => ({
@@ -202,17 +210,25 @@ export default function ThresholdSettings() {
     }));
   };
 
-  const handleSave = () => {
-    saveThresholds(thresholds);
-    // dispatch custom event เพื่อให้ Realtime.js (same-tab) อัปเดตสีสถานะทันที
+  const handleSave = async () => {
+    setSyncing(true);
+    // 1. บันทึก localStorage ก่อน (เร็ว)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(thresholds));
+    // 2. sync ขึ้น Firebase — ESP32 จะอ่านค่าใหม่รอบถัดไป
+    try {
+      await set(ref(database, FIREBASE_PATH), thresholds);
+      console.log('[Firebase] Thresholds synced →', FIREBASE_PATH);
+    } catch (err) {
+      console.error('[Firebase] Sync failed:', err);
+    }
+    // 3. แจ้ง Realtime.js (same-tab) ให้อัปเดตสีทันที
     window.dispatchEvent(new Event('thresholdUpdated'));
+    setSyncing(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
 
-  const handleReset = () => {
-    setThresholds(DEFAULT_THRESHOLDS);
-  };
+  const handleReset = () => setThresholds(DEFAULT_THRESHOLDS);
 
   return (
     <div className="ts-page">
@@ -233,7 +249,7 @@ export default function ThresholdSettings() {
       {/* Info Banner */}
       <div className="ts-info-banner">
         <Info size={15} />
-        <span>ปรับค่าเกณฑ์ให้เหมาะกับสายพันธุ์และสภาพบ่อของคุณ การเปลี่ยนแปลงจะมีผลทันทีหลังบันทึก</span>
+        <span>ปรับค่าเกณฑ์ให้เหมาะกับสายพันธุ์และสภาพบ่อ — ค่าจะถูกส่งให้ ESP32 &amp; Telegram แจ้งเตือนทันทีหลังบันทึก</span>
       </div>
 
       {/* Content */}
@@ -257,12 +273,17 @@ export default function ThresholdSettings() {
 
       {/* Save Button */}
       <div className="ts-save-bar">
-        <button className="ts-save-btn" onClick={handleSave}>
+        <button className="ts-save-btn" onClick={handleSave} disabled={syncing}>
           <AnimatePresence mode="wait">
             {saved ? (
               <motion.span key="saved" className="ts-save-inner"
                 initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <CheckCircle size={18} /> บันทึกแล้ว!
+                <CheckCircle size={18} /> บันทึกแล้ว &amp; ส่งให้ ESP32 แล้ว!
+              </motion.span>
+            ) : syncing ? (
+              <motion.span key="syncing" className="ts-save-inner"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <span className="ts-spinner" /> กำลังส่งข้อมูล...
               </motion.span>
             ) : (
               <motion.span key="save" className="ts-save-inner"
