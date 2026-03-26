@@ -204,6 +204,8 @@ export default function ThresholdSettings() {
 
   const handleSave = () => {
     saveThresholds(thresholds);
+    // dispatch custom event เพื่อให้ Realtime.js (same-tab) อัปเดตสีสถานะทันที
+    window.dispatchEvent(new Event('thresholdUpdated'));
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
