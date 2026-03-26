@@ -2,7 +2,7 @@
 // Panel ปรับค่า threshold สำหรับ pH, DO, Temperature, Turbidity
 // บันทึกลง localStorage และ export ฟังก์ชันอ่านค่า
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
