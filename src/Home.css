@@ -6,7 +6,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Palette */
   --ink:         #0f172a;
   --ink-soft:    #1e293b;
   --teal-deep:   #0f766e;
@@ -19,35 +18,29 @@
   --rose:        #f43f5e;
   --green:       #10b981;
 
-  /* Surfaces */
   --bg:          #f8fafc;
   --surface:     #ffffff;
   --border:      #e2e8f0;
   --border-soft: #f1f5f9;
 
-  /* Text */
   --text:        #0f172a;
   --text-2:      #334155;
   --text-muted:  #64748b;
 
-  /* Effects */
   --shadow-sm:   0 1px 3px rgba(0,0,0,0.05);
   --shadow-md:   0 4px 15px rgba(0,0,0,0.04);
   --shadow-card: 0 4px 20px rgba(0,0,0,0.03);
 
-  /* Sizing */
   --radius-sm:   12px;
   --radius-md:   16px;
   --radius-lg:   20px;
   --radius-xl:   28px;
   --radius-pill: 999px;
 
-  /* Typography */
   --font-display: 'Inter', 'Kanit', sans-serif;
   --font-body:    'Kanit', sans-serif;
 }
 
-/* ─── Reset & Base ───────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 
@@ -137,7 +130,7 @@ body {
   border-color: rgba(244,63,94,0.3);
 }
 
-/* ─── Hero Strip (Compact) ───────────── */
+/* ─── Hero Strip ─────────────────────── */
 .hero-strip {
   background: linear-gradient(145deg, var(--ink) 0%, #172a46 100%);
   padding: 24px 20px 24px;
@@ -188,7 +181,7 @@ body {
   font-weight: 400;
 }
 
-/* ─── Device Actions (รวม Select + Delete) ─── */
+/* ─── Device Actions ─────────────────── */
 .device-actions {
   display: flex;
   align-items: center;
@@ -343,11 +336,10 @@ body {
   border: 1px dashed var(--border);
 }
 
-/* ─── Menu Section ───────────────────── */
+/* ─── Menu Grid ──────────────────────── */
 .menu-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
   gap: 12px;
 }
 
@@ -428,6 +420,20 @@ body {
 .btn-amber:not(:disabled):hover { background: #fef3c7; }
 .btn-amber .btn-icon { background: #fde68a; color: #b45309; }
 
+/* ─── btn-slate (ตั้งค่าเกณฑ์) ──────── */
+.btn-slate {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  border-color: #cbd5e1;
+  color: #334155;
+  box-shadow: 0 4px 15px rgba(51,65,85,0.08);
+}
+.btn-slate:not(:disabled):hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+.btn-slate .btn-icon { background: #cbd5e1; color: #475569; }
+
 /* ─── Modal ──────────────────────────── */
 .modal-backdrop {
   position: fixed;
@@ -472,7 +478,6 @@ body {
   margin-bottom: 30px;
 }
 
-/* Modal Actions (Buttons) */
 .modal-actions {
   display: flex;
   gap: 12px;
@@ -491,25 +496,14 @@ body {
   transition: all 0.2s;
 }
 
-.modal-btn.primary {
-  background: var(--teal);
-  color: #fff;
-}
+.modal-btn.primary { background: var(--teal); color: #fff; }
 .modal-btn.primary:hover { background: var(--teal-deep); }
-
-.modal-btn.cancel {
-  background: #f1f5f9;
-  color: #475569;
-}
+.modal-btn.cancel { background: #f1f5f9; color: #475569; }
 .modal-btn.cancel:hover { background: #e2e8f0; }
-
-.modal-btn.confirm {
-  background: var(--rose);
-  color: #fff;
-}
+.modal-btn.confirm { background: var(--rose); color: #fff; }
 .modal-btn.confirm:hover { background: #be123c; }
 
-/* ─── Responsive adjustments ─────────── */
+/* ─── Responsive ─────────────────────── */
 @media (min-width: 680px) {
   .dashboard-body { max-width: 760px; padding: 32px 24px; }
   .menu-grid { grid-template-columns: repeat(2, 1fr); }
